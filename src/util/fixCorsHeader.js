@@ -24,6 +24,6 @@ RequestPipelineContext.prototype.getProxyOrigin = function getProxyOrigin(isCros
     return urlUtils.getDomain({
         protocol: this.serverInfo.protocol,
         // use host instead of hostname so we can manually add in the port
-        host: this.serverInfo.host + (hostPort ? ':' + hostPort : '')
+        host: this.serverInfo.hostname + (hostPort ? ':' + hostPort : '')
     });
 };
