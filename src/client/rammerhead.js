@@ -36,16 +36,20 @@
 
             keyChanges = [];
         }, updateInterval);
-        document.addEventListener('visibilitychange', function() {
+        document.addEventListener('visibilitychange', function () {
             if (document.visibilityState === 'hidden') {
                 var update = compileUpdate();
                 if (update) {
                     // even though we'll never get the timestamp, it's fine. this way,
                     // the data is safer
-                    hammerhead.nativeMethods.sendBeacon.call(window.navigator, getSyncStorageEndpoint(), JSON.stringify({
-                        type: 'update',
-                        updateData: update
-                    }));
+                    hammerhead.nativeMethods.sendBeacon.call(
+                        window.navigator,
+                        getSyncStorageEndpoint(),
+                        JSON.stringify({
+                            type: 'update',
+                            updateData: update
+                        })
+                    );
                 }
             }
         });
@@ -96,18 +100,16 @@
             return timestamp;
         }
         function getSyncStorageEndpoint() {
-            return '/syncLocalStorage?sessionId=' + encodeURIComponent(sessionId) + '&origin=' + encodeURIComponent(origin);
+            return (
+                '/syncLocalStorage?sessionId=' + encodeURIComponent(sessionId) + '&origin=' + encodeURIComponent(origin)
+            );
         }
         function localStorageRequest(data, callback) {
             if (!data || typeof data !== 'object') throw new TypeError('data must be an object');
 
             var request = hammerhead.createNativeXHR();
             // make synchronous if there is no callback
-            request.open(
-                'POST',
-                getSyncStorageEndpoint(),
-                !!callback
-            );
+            request.open('POST', getSyncStorageEndpoint(), !!callback);
             request.setRequestHeader('content-type', 'application/json');
             request.send(JSON.stringify(data));
             function check() {

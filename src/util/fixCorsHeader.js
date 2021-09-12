@@ -19,7 +19,10 @@ RequestPipelineContext.prototype.getProxyOrigin = function getProxyOrigin(isCros
     const port = isCrossDomain ? this.serverInfo.port : this.serverInfo.crossDomainPort;
 
     // don't add a port if port is 443 and protocol is https:, and don't add a port if port is 80 and protocol is http:
-    const hostPort = (this.serverInfo.protocol == 'https:' && port == 443) || (this.serverInfo.protocol == 'http:' && port == 80) ? null : port;
+    const hostPort =
+        (this.serverInfo.protocol == 'https:' && port == 443) || (this.serverInfo.protocol == 'http:' && port == 80)
+            ? null
+            : port;
 
     return urlUtils.getDomain({
         protocol: this.serverInfo.protocol,
