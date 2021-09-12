@@ -64,4 +64,5 @@ module.exports = {
     getServerInfo: () => ({ hostname: 'localhost', port: 8080, crossDomainPort: 8081, protocol: 'http:' })
 };
 
-Object.assign(module.exports, require('../config'));
+// eslint-disable-next-line no-empty
+try { Object.assign(module.exports, require('../config')); } catch(e) {}

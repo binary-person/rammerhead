@@ -30,4 +30,5 @@ module.exports = {
     unusedInterval: 1000 * 60 * 10 // 10 minutes
 };
 
-Object.assign(module.exports, require('../config2'));
+// eslint-disable-next-line no-empty
+try { Object.assign(module.exports, require('../config2')); } catch(e) {}

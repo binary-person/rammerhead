@@ -19,7 +19,7 @@ The proxy allows users to create a "session". When they access their session, th
 
 Assuming you have node already installed, clone the repo, then run `npm install`.
 
-After, configure your settings in [src/config.js](src/config.js) and [src/config2.js](src/config2.js). If you wish to consistently pull updates from this repo without the hassle of merging, options configured in [config.js](config.js) and [config2.js](config2.js) will override the configs in `src/`.
+After, configure your settings in [src/config.js](src/config.js) and [src/config2.js](src/config2.js). If you wish to consistently pull updates from this repo without the hassle of merging, create `config.js` and `config2.js` in the root folder so they override the configs in `src/`.
 
 Finally, there are two options in starting rammerhead:
 
