@@ -3,7 +3,7 @@ const path = require('path');
 
 module.exports = {
     // valid values: 'disabled', 'debug', 'traffic', 'info', 'warn', 'error'
-    logLevel: 'debug',
+    logLevel: 'traffic',
     generatePrefix: (level) => `[${new Date().toISOString()}] [${level.toUpperCase()}] `,
 
     // if rammerhead is sitting behind a reverse proxy like nginx, then the logger and
