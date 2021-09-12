@@ -26,3 +26,12 @@ table.table-bordered > thead > tr > th {
 table.table-bordered > tbody > tr > td {
   border: 1px solid #c1c1c1;
 }
+
+#version {
+  position: absolute;
+  margin: 0;
+  right: 0;
+  bottom: 0;
+  font-size: 15px;
+  font-weight: bold;
+}
