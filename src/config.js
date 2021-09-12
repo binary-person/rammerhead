@@ -1,5 +1,6 @@
 const cluster = require('cluster');
 const path = require('path');
+const fs = require('fs');
 
 module.exports = {
     // valid values: 'disabled', 'debug', 'traffic', 'info', 'warn', 'error'
@@ -64,5 +65,4 @@ module.exports = {
     getServerInfo: () => ({ hostname: 'localhost', port: 8080, crossDomainPort: 8081, protocol: 'http:' })
 };
 
-// eslint-disable-next-line no-empty
-try { Object.assign(module.exports, require('../config')); } catch(e) {}
+if (fs.existsSync(path.join(__dirname, '../config.js'))) Object.assign(module.exports, require('../config'));

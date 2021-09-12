@@ -1,5 +1,6 @@
 const cluster = require('cluster');
 const path = require('path');
+const fs = require('fs');
 const RammerheadSessionFilePersistentStore = require('./classes/RammerheadSessionFilePersistentStore');
 const RammerheadSessionMemoryCacheFileStore = require('./classes/RammerheadSessionMemoryCacheFileStore');
 
@@ -30,5 +31,4 @@ module.exports = {
     unusedInterval: 1000 * 60 * 10 // 10 minutes
 };
 
-// eslint-disable-next-line no-empty
-try { Object.assign(module.exports, require('../config2')); } catch(e) {}
+if (fs.existsSync(path.join(__dirname, '../config2.js'))) Object.assign(module.exports, require('../config2'));
