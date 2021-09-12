@@ -17,10 +17,13 @@ RequestPipelineContext.prototype.getProxyOrigin = function getProxyOrigin(isCros
     // However, the latter case will never happen because hammerhead made all client rewriting cross-domain requests to always use the
     // cross-domain ports, even if the origin is from a cross-domain port.
     const port = isCrossDomain ? this.serverInfo.port : this.serverInfo.crossDomainPort;
+
+    // don't add a port if port is 443 and protocol is https:, and don't add a port if port is 80 and protocol is http:
+    const hostPort = (this.serverInfo.protocol == 'https:' && port == 443) || (this.serverInfo.protocol == 'http:' && port == 80) ? null : port;
+
     return urlUtils.getDomain({
         protocol: this.serverInfo.protocol,
-        hostname: this.serverInfo.hostname,
-        // don't add a port if port is 443 and protocol is https:, and don't add a port if port is 80 and protocol is http:
-        port:     (this.serverInfo.protocol == 'https:' && port == 443) || (this.serverInfo.protocol == 'http:' && port == 80) ? null : port
+        // use host instead of hostname so we can manually add in the port
+        host: this.serverInfo.host + (hostPort ? ':' + hostPort : '')
     });
 };
