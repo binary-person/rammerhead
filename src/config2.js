@@ -29,3 +29,5 @@ module.exports = {
     unusedTimeout: 1000 * 60 * 20, // 20 minutes
     unusedInterval: 1000 * 60 * 10 // 10 minutes
 };
+
+Object.assign(module.exports, require('../config2'));

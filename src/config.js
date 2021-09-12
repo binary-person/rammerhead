@@ -24,7 +24,7 @@ module.exports = {
     ssl: null,
 
     // optional: enforce a password for creating new sessions
-    password: 'lol',
+    password: null,
 
     // when running this behind a reverse proxy like cloudflare or nginx, they add unnecessary headers
     // that get sent to the proxied target. this is to remove such headers.
@@ -63,3 +63,5 @@ module.exports = {
     // value to always be what you expect (meaning the port could be a normal port or a crossDomainPort)
     getServerInfo: () => ({ hostname: 'localhost', port: 8080, crossDomainPort: 8081, protocol: 'http:' })
 };
+
+Object.assign(module.exports, require('../config'));

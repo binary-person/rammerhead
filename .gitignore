@@ -5,3 +5,7 @@ sessions/*
 
 # but commit the empty folders
 !sessions/.gitkeep
+
+# ignore any custom configurations
+/config.js
+/config2.js

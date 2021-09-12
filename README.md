@@ -4,23 +4,22 @@
 
 ## Who is this package for
 
-Package is for those who
-- don't want to
-
-## Features of proxy
-
-
+Package is for those who want a fully-configurable proxy that works on many sites
 
 ## Effectiveness of proxy
 
 This proxy supports proxying
-- react
+- basically anything except google logins
+
+## Features of proxy
+
+The proxy allows users to create a "session". When they access their session, their localStorage and cookies will be synced with rammerhead. This allows for accurately mocking cookied requests and conveniently save their logins even if they switch devices. This also enables users to configure a custom HTTP proxy server for rammerhead to connect to for the session.
 
 ## Installing and running
 
 Assuming you have node already installed, clone the repo, then run `npm install`.
 
-After, configure your settings in [src/config.js](src/config.js) and [src/config2.js](src/config2.js).
+After, configure your settings in [src/config.js](src/config.js) and [src/config2.js](src/config2.js). If you wish to consistently pull updates from this repo without the hassle of merging, options configured in [config.js](config.js) and [config2.js](config2.js) will override the configs in `src/`.
 
 Finally, there are two options in starting rammerhead:
 
