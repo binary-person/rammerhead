@@ -40,7 +40,8 @@ function startServer(config, config2) {
     }
 
     // remove headers defined in config.js
-    proxyServer.addToOnRequestPipeline((req) => {
+    proxyServer.addToOnRequestPipeline((req, _res, _serverInfo, isRoute) => {
+        if (isRoute) return; // only strip those that are going to the proxy destination website
         for (const eachHeader of config.stripClientHeaders) {
             delete req.headers[eachHeader];
         }

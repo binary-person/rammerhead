@@ -30,7 +30,7 @@ table.table-bordered > tbody > tr > td {
 #version {
   position: absolute;
   margin: 0;
-  right: 0;
+  right: 10px;
   bottom: 0;
   font-size: 15px;
   font-weight: bold;
