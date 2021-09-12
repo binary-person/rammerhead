@@ -30,7 +30,7 @@ module.exports = {
     // when running this behind a reverse proxy like cloudflare or nginx, they add unnecessary headers
     // that get sent to the proxied target. this is to remove such headers.
     // cloudflare example:
-    // stripClientHeaders: ['cf-ipcountry', 'cf-ray', 'x-forwarded-proto', 'cf-visitor', 'cf-connecting-ip', 'cdn-loop'],
+    // stripClientHeaders: ['cf-ipcountry', 'cf-ray', 'x-forwarded-proto', 'cf-visitor', 'cf-connecting-ip', 'cdn-loop', 'x-forwarded-for'],
     stripClientHeaders: [],
     // sometimes, you want to embed the proxy in an iframe, so you would want to remove the x-frame-options header like so
     // rewriteServerHeaders: {
