@@ -1,0 +1,7 @@
+node_modules/
+
+# don't commit session data
+sessions/*
+
+# but commit the empty folders
+!sessions/.gitkeep
