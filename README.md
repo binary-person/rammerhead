@@ -2,6 +2,12 @@
 
 > proxy based on testcafe-hammerhead
 
+
+## Supporting me and contributing
+
+Server infrastructure costs money and developing this project consumes a lot of my time, so I would appreciate it greatly if you become a Patreon member: https://www.patreon.com/rammerhead
+
+
 ## Who is this package for
 
 Package is for those who want a fully-configurable proxy that works on many sites
@@ -9,7 +15,7 @@ Package is for those who want a fully-configurable proxy that works on many site
 ## Effectiveness of proxy
 
 This proxy supports proxying
-- basically anything except google logins
+- basically everything except google logins
 
 ## Features of proxy
 
@@ -28,7 +34,3 @@ Finally, there are two options in starting rammerhead:
 - `node src/multi-server.js`
   - this spawns N workers and load balances automatically among them, where N is the number of CPU threads in the system. configure number of workers settings in [src/multi-config.js](src/multi-config.js)
   - try not to use this because race conditions occur when workers try to read and delete files from the session store at the same time. this can lead to unexpected behavior, like cookies randomly deciding to not work. Also, see [RammerheadSessionFilePersistentStore.js](src/RammerheadSessionFilePersistentStore.js) for a more in-depth description on the drawbacks of using this setup.
-
-## Supporting me and contributing
-
-Server infrastructure costs money, so I would appreciate it greatly if you become a Patreon member.
