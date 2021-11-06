@@ -10,7 +10,8 @@
         }
     }
     function getPassword() {
-        return document.getElementById('session-password').value;
+        var element = document.getElementById('session-password');
+        return element ? element.value : '';
     }
     function get(url, callback, shush = false) {
         var pwd = getPassword();
@@ -101,7 +102,9 @@
             var sessionId = localStorage.getItem(localStorageKeyDefault);
             if (sessionId) {
                 var data = sessionIdsStore.get();
-                data.filter((e) => e.id === sessionId);
+                data.filter(function (e) {
+                    return e.id === sessionId;
+                });
                 if (data.length) return data[0];
             }
             return null;
@@ -184,6 +187,13 @@
         }
         throw new TypeError('cannot find ' + id);
     }
+
+    get('/mainport', function (data) {
+        var defaultPort = window.location.protocol === 'https:' ? 443 : 80;
+        var currentPort = window.location.port || defaultPort;
+        var mainPort = data || defaultPort;
+        if (currentPort != mainPort) window.location.port = mainPort;
+    });
 
     window.addEventListener('load', function () {
         loadSessions();

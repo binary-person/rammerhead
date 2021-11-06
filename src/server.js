@@ -105,6 +105,10 @@ function startServer(config, config2) {
             res.end(sessionStore.has(id) ? 'exists' : 'not found');
         }
     });
+    proxyServer.GET('/mainport', (req, res) => {
+        const serverInfo = config.getServerInfo(req);
+        res.end(((serverInfo.port || '').toString()));
+    });
 
     // cleanup unused session ids
     if (config2.unusedTimeout && config2.unusedInterval) {
