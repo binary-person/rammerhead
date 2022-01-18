@@ -225,7 +225,7 @@
                 if (!value) return setError('session does not exist. try deleting or generating a new session');
                 api.editsession(id, httpproxy, function () {
                     editSession(id, httpproxy);
-                    window.open('/' + id + '/' + url);
+                    window.location.href = '/' + id + '/' + url;
                 });
             });
         }
