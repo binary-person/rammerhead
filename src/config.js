@@ -22,10 +22,8 @@ module.exports = {
     //     return { hostname: new URL('http://' + req.headers.host).hostname, port: 443, crossDomainPort: 8443, protocol: 'https: };
     // },
 
-    // optional: enforce a password for creating new sessions
-    password: null,
-
-
+    // enforce a password for creating new sessions. set to null to disable
+    password: 'sharkie4life',
 
     //// REWRITE HEADER CONFIGURATION ////
 
@@ -41,8 +39,6 @@ module.exports = {
     // },
     rewriteServerHeaders: {},
 
-
-
     //// SESSION STORE CONFIG ////
 
     // see src/classes/RammerheadSessionFileCache.js for more details and options
@@ -52,8 +48,6 @@ module.exports = {
         cacheCheckInterval: 1000 * 60 * 10, // 10 minutes
         staleCleanupOptions: null
     },
-
-
 
     //// LOGGING CONFIGURATION ////
 

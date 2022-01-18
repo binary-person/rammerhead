@@ -4,9 +4,9 @@ const httpResponse = require('../util/httpResponse');
 const config = require('../config');
 
 /**
- * 
- * @param {import('../classes/RammerheadProxy')} proxyServer 
- * @param {import('../classes/RammerheadSessionAbstractStore')} sessionStore 
+ *
+ * @param {import('../classes/RammerheadProxy')} proxyServer
+ * @param {import('../classes/RammerheadSessionAbstractStore')} sessionStore
  */
 module.exports = function setupRoutes(proxyServer, sessionStore) {
     const isNotAuthorized = (req, res) => {
@@ -67,6 +67,6 @@ module.exports = function setupRoutes(proxyServer, sessionStore) {
     });
     proxyServer.GET('/mainport', (req, res) => {
         const serverInfo = config.getServerInfo(req);
-        res.end(((serverInfo.port || '').toString()));
+        res.end((serverInfo.port || '').toString());
     });
 };

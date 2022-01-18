@@ -1,8 +1,8 @@
 const config = require('../config');
 
 /**
- * 
- * @param {import('../classes/RammerheadProxy')} proxyServer 
+ *
+ * @param {import('../classes/RammerheadProxy')} proxyServer
  */
 module.exports = function setupPipeline(proxyServer) {
     // remove headers defined in config.js

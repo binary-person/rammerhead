@@ -161,9 +161,7 @@ class RammerheadSessionFileCache extends RammerheadSessionAbstractStore {
                 fs.writeFileSync(this._getSessionFilePath(sessionId), session.serializeSession());
                 this.cachedSessions.delete(sessionId);
                 deleteCount++;
-                logger.debug(
-                    `(FileCache._saveCacheToDisk) removed ${sessionId} from memory and saved to store`
-                );
+                logger.debug(`(FileCache._saveCacheToDisk) removed ${sessionId} from memory and saved to store`);
             }
         }
 

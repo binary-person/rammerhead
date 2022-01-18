@@ -387,8 +387,8 @@ class RammerheadProxy extends Proxy {
      * @private
      */
     _setupLocalStorageServiceRoutes() {
-        this.GET('/rammerhead.js', {
-            content: fs.readFileSync(path.join(__dirname, '../client/rammerhead.js')),
+        this.GET('/rammerhead.min.js', {
+            content: fs.readFileSync(path.join(__dirname, '../client/rammerhead.min.js')),
             contentType: 'application/x-javascript'
         });
         this.POST('/syncLocalStorage', async (req, res) => {

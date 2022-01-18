@@ -2,6 +2,8 @@
 
 > proxy based on testcafe-hammerhead
 
+Demo link (password is sharkie4life): https://rammerhead.org
+
 
 ## Supporting me and contributing
 
@@ -31,3 +33,7 @@ Finally, there are two options in starting rammerhead:
 
 - `node src/server.js`
   - this starts the server as normal
+
+## Discord server
+
+For any user-help non-issue related questions, please ask them here: [Rammerhead Support Server](https://discord.gg/VNT4E7gN5Y).
