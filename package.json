@@ -1,6 +1,6 @@
 {
   "name": "rammerhead",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "User friendly web proxy powered by testcafe-hammerhead",
   "main": "src/index.js",
   "scripts": {
@@ -23,11 +23,7 @@
   "homepage": "https://github.com/binary-person/rammerhead#readme",
   "dependencies": {
     "async-exit-hook": "^2.0.1",
-    "json-date-parser": "^1.0.1",
     "mime": "^2.5.2",
-    "proxy-deep": "^3.1.1",
-    "rate-limiter-flexible": "^2.2.4",
-    "rimraf": "^3.0.2",
     "testcafe-hammerhead": "24.5.1",
     "uuid": "^8.3.2",
     "ws": "^8.2.0"
