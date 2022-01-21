@@ -39,7 +39,7 @@ class RammerheadSession extends Session {
         // };
 
         // support localStorage //
-        this.injectable.scripts.push('/rammerhead.js');
+        this.injectable.scripts.push('/rammerhead.min.js');
 
         this.id = id;
         if (!dontConnectToData) {

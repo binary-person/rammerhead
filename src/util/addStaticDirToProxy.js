@@ -4,7 +4,7 @@ const path = require('path');
 
 // these routes are reserved by hammerhead and rammerhead
 const forbiddenRoutes = [
-    '/rammerhead.js',
+    '/rammerhead.min.js',
     '/hammerhead.js',
     '/task.js',
     '/iframe-task.js',
