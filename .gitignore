@@ -1,5 +1,8 @@
 node_modules/
 
+# we're not using npm ci anyway
+package-lock.json
+
 # don't commit generated builds
 src/client/rammerhead.min.js
 

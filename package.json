@@ -25,7 +25,7 @@
   "dependencies": {
     "async-exit-hook": "^2.0.1",
     "mime": "^2.5.2",
-    "testcafe-hammerhead": "24.5.1",
+    "testcafe-hammerhead": "24.5.13",
     "uuid": "^8.3.2",
     "ws": "^8.2.0"
   },

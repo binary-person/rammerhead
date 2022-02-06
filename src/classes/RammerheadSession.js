@@ -33,6 +33,7 @@ class RammerheadSession extends Session {
         this.getAuthCredentials = () => ({});
         this.handleFileDownload = () => void 0;
         this.handlePageError = () => void 0;
+        this.handleAttachment = () => void 0;
         // this.handlePageError = (ctx, err) => {
         //     console.error(ctx.req.url);
         //     console.error(err);
