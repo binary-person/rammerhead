@@ -2,36 +2,33 @@ body {
   background-color: rgb(255, 239, 231);
   font-family: Arial, Helvetica, sans-serif;
 }
+
 header {
   text-align: center;
 }
+
 header h1 {
   margin-top: 0;
   font-weight: bold;
 }
+
 header img {
   width: 200px;
 }
+
 .input-group-text, .disable-text {
-    cursor: default;
-    user-select: none;
+  cursor: default;
+  user-select: none;
 }
 
 table.table-bordered {
   border: 1px solid #c1c1c1;
 }
-table.table-bordered > thead > tr > th {
-  border: 1px solid #c1c1c1;
-}
-table.table-bordered > tbody > tr > td {
+
+table.table-bordered>thead>tr>th {
   border: 1px solid #c1c1c1;
 }
 
-#version {
-  position: absolute;
-  margin: 0;
-  right: 10px;
-  bottom: 0;
-  font-size: 15px;
-  font-weight: bold;
+table.table-bordered>tbody>tr>td {
+  border: 1px solid #c1c1c1;
 }
