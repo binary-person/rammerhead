@@ -1,11 +1,11 @@
 {
   "name": "rammerhead",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "User friendly web proxy powered by testcafe-hammerhead",
   "main": "src/index.js",
   "scripts": {
     "preinstall": "npx npm-force-resolutions",
-    "start": "node src/server.js",
+    "start": "npm run build && node src/server.js",
     "build": "babel ./src/client/rammerhead.js --out-file ./src/client/rammerhead.min.js --presets babel-preset-es2015,babel-preset-minify --no-comments",
     "test": "npm run format && npm run lint",
     "lint": "eslint -c .eslintrc.json --ext .js src",

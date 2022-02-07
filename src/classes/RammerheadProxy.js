@@ -12,6 +12,7 @@ const streamToString = require('../util/streamToString');
 const URLPath = require('../util/URLPath');
 
 require('../util/fixCorsHeader');
+require('../util/fixWebsocket');
 
 /**
  * taken directly from
