@@ -101,7 +101,7 @@ class RammerheadProxy extends Proxy {
             // the values don't matter (except for developmentMode), since we'll be rewriting serverInfo anyway
             super('hostname', 'port', 'port', {
                 ssl,
-                developmentMode: false,
+                developmentMode: !!process.env.DEVELOPMENT,
                 cache: true
             });
 
@@ -117,7 +117,7 @@ class RammerheadProxy extends Proxy {
             };
             super('doesntmatter', port, crossDomainPort, {
                 ssl,
-                developmentMode: false,
+                developmentMode: !!process.env.DEVELOPMENT,
                 cache: true
             });
             this.crossDomainPort = crossDomainPort;

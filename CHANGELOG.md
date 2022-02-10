@@ -1,3 +1,8 @@
+## v1.0.4
+
+- add support for environment variable `DEVELOPMENT`
+- fix crash when fetching /deletesession with a non-existent session id
+
 ## v1.0.3
 
 - fix stability issues with websocket

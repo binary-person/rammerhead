@@ -52,6 +52,7 @@ module.exports = function setupRoutes(proxyServer, sessionStore) {
 
         if (!id || !sessionStore.has(id)) {
             res.end('not found');
+            return;
         }
 
         sessionStore.delete(id);
