@@ -1,3 +1,7 @@
+## v1.0.43
+
+- revert "revert fix for fix npm package"
+
 ## v1.0.42
 
 - add entrypoint index.js for rammerhead package
