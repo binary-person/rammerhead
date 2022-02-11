@@ -1,3 +1,8 @@
+## v1.0.41
+
+- update demo link
+- fix npm package
+
 ## v1.0.4
 
 - add support for environment variable `DEVELOPMENT`

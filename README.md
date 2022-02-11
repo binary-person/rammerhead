@@ -2,7 +2,7 @@
 
 > proxy based on testcafe-hammerhead
 
-Demo link (password is sharkie4life): https://rammerhead.org
+Demo link: https://direct.rammerhead.org
 
 
 ## Supporting me and contributing

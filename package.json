@@ -4,7 +4,7 @@
   "description": "User friendly web proxy powered by testcafe-hammerhead",
   "main": "src/index.js",
   "scripts": {
-    "preinstall": "npx npm-force-resolutions",
+    "preinstall": "npm install --package-lock-only --ignore-scripts && npx npm-force-resolutions",
     "start": "npm run build && node src/server.js",
     "build": "babel ./src/client/rammerhead.js --out-file ./src/client/rammerhead.min.js --presets babel-preset-es2015,babel-preset-minify --no-comments",
     "test": "npm run format && npm run lint",
