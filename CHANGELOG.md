@@ -1,3 +1,8 @@
+## v1.0.42
+
+- add entrypoint index.js for rammerhead package
+- add package-lock.json to source control
+
 ## v1.0.41
 
 - update demo link
