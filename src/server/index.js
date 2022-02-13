@@ -1,11 +1,18 @@
+require('dotenv-flow').config();
+
 const exitHook = require('async-exit-hook');
 const RammerheadProxy = require('../classes/RammerheadProxy');
 const addStaticDirToProxy = require('../util/addStaticDirToProxy');
-const logger = require('../util/logger');
 const RammerheadSessionFileCache = require('../classes/RammerheadSessionFileCache');
 const config = require('../config');
 const setupRoutes = require('./setupRoutes');
 const setupPipeline = require('./setupPipeline');
+const RammerheadLogging = require('../classes/RammerheadLogging');
+
+const logger = new RammerheadLogging({
+    logLevel: config.logLevel,
+    generatePrefix: config.generatePrefix
+});
 
 const proxyServer = new RammerheadProxy({
     logger,
@@ -19,11 +26,11 @@ const proxyServer = new RammerheadProxy({
 
 if (config.publicDir) addStaticDirToProxy(proxyServer, config.publicDir);
 
-const sessionStore = new RammerheadSessionFileCache(config.fileCacheSessionConfig);
+const sessionStore = new RammerheadSessionFileCache({ logger, ...config.fileCacheSessionConfig });
 sessionStore.attachToProxy(proxyServer);
 
 setupPipeline(proxyServer);
-setupRoutes(proxyServer, sessionStore);
+setupRoutes(proxyServer, sessionStore, logger);
 
 // nicely close proxy server and save sessions to store before we exit
 exitHook(() => {

@@ -1,3 +1,10 @@
+## v1.0.5
+
+- expose more modules for npm package
+- add support for .env files
+- add `deleteUnused` config option
+- fix default 3 day session delete
+
 ## v1.0.43
 
 - revert "revert fix for fix npm package"

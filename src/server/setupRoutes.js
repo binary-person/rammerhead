@@ -7,13 +7,14 @@ const config = require('../config');
  *
  * @param {import('../classes/RammerheadProxy')} proxyServer
  * @param {import('../classes/RammerheadSessionAbstractStore')} sessionStore
+ * @param {import('../classes/RammerheadLogging')} logger
  */
-module.exports = function setupRoutes(proxyServer, sessionStore) {
+module.exports = function setupRoutes(proxyServer, sessionStore, logger) {
     const isNotAuthorized = (req, res) => {
         if (!config.password) return;
         const { pwd } = new URLPath(req.url).getParams();
         if (config.password !== pwd) {
-            httpResponse.accessForbidden(req, res, config.getIP(req), 'bad password');
+            httpResponse.accessForbidden(logger, req, res, config.getIP(req), 'bad password');
             return true;
         }
         return false;
@@ -31,7 +32,7 @@ module.exports = function setupRoutes(proxyServer, sessionStore) {
         let { id, httpProxy } = new URLPath(req.url).getParams();
 
         if (!id || !sessionStore.has(id)) {
-            return httpResponse.badRequest(req, res, config.getIP(req), 'not found');
+            return httpResponse.badRequest(logger, req, res, config.getIP(req), 'not found');
         }
 
         const session = sessionStore.get(id);
@@ -61,7 +62,7 @@ module.exports = function setupRoutes(proxyServer, sessionStore) {
     proxyServer.GET('/sessionexists', (req, res) => {
         const id = new URLPath(req.url).get('id');
         if (!id) {
-            httpResponse.badRequest(req, res, config.getIP(req), 'Must specify id parameter');
+            httpResponse.badRequest(logger, req, res, config.getIP(req), 'Must specify id parameter');
         } else {
             res.end(sessionStore.has(id) ? 'exists' : 'not found');
         }

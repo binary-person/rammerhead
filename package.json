@@ -1,6 +1,6 @@
 {
   "name": "rammerhead",
-  "version": "1.0.43",
+  "version": "1.0.5",
   "description": "User friendly web proxy powered by testcafe-hammerhead",
   "main": "src/index.js",
   "scripts": {
@@ -36,7 +36,8 @@
     "babel-preset-minify": "^0.5.1",
     "eslint": "^7.32.0",
     "npm-force-resolutions": "0.0.10",
-    "prettier": "^2.3.2"
+    "prettier": "^2.3.2",
+    "dotenv-flow": "^3.2.0"
   },
   "resolutions": {
     "tmp": "0.2.1"

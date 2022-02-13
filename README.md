@@ -2,7 +2,7 @@
 
 > proxy based on testcafe-hammerhead
 
-Demo link: https://direct.rammerhead.org
+Demo link: https://direct2.rammerhead.org
 
 
 ## Supporting me and contributing

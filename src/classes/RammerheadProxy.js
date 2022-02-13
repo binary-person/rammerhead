@@ -6,10 +6,10 @@ const path = require('path');
 const { getPathname } = require('testcafe-hammerhead/lib/utils/url');
 const { Proxy } = require('testcafe-hammerhead');
 const WebSocket = require('ws');
-const logger = require('../util/logger');
 const httpResponse = require('../util/httpResponse');
 const streamToString = require('../util/streamToString');
 const URLPath = require('../util/URLPath');
+const RammerheadLogging = require('../classes/RammerheadLogging');
 
 require('../util/fixCorsHeader');
 require('../util/fixWebsocket');
@@ -45,6 +45,7 @@ class RammerheadProxy extends Proxy {
     /**
      *
      * @param {object} options
+     * @param {RammerheadLogging|undefined} options.logger
      * @param {(req: http.IncomingMessage) => string} options.loggerGetIP - use custom logic to get IP, either from headers or directly
      * @param {string} options.bindingAddress - hostname for proxy to bind to
      * @param {number} options.port - port for proxy to listen to
@@ -57,6 +58,7 @@ class RammerheadProxy extends Proxy {
      */
     constructor({
         loggerGetIP = (req) => req.socket.remoteAddress,
+        logger = new RammerheadLogging({ logLevel: 'disabled' }),
         bindingAddress = '127.0.0.1',
         port = 8080,
         crossDomainPort = 8081,
@@ -140,6 +142,7 @@ class RammerheadProxy extends Proxy {
         this.serverInfo2 = null;
 
         this.loggerGetIP = loggerGetIP;
+        this.logger = logger;
     }
 
     // add WS routing
@@ -197,11 +200,11 @@ class RammerheadProxy extends Proxy {
         if (route) {
             // RH stands for rammerhead. RHROUTE is a custom implementation by rammerhead that is
             // unrelated to hammerhead
-            logger.traffic(`WSROUTE UPGRADE ${this.loggerGetIP(req)} ${req.url}`);
+            this.logger.traffic(`WSROUTE UPGRADE ${this.loggerGetIP(req)} ${req.url}`);
             route.wsServer.handleUpgrade(req, socket, head, (client, req) => {
-                logger.traffic(`WSROUTE OPEN ${this.loggerGetIP(req)} ${req.url}`);
+                this.logger.traffic(`WSROUTE OPEN ${this.loggerGetIP(req)} ${req.url}`);
                 client.once('close', () => {
-                    logger.traffic(`WSROUTE CLOSE ${this.loggerGetIP(req)} ${req.url}`);
+                    this.logger.traffic(`WSROUTE CLOSE ${this.loggerGetIP(req)} ${req.url}`);
                 });
                 route.handler(client, req);
             });
@@ -336,7 +339,7 @@ class RammerheadProxy extends Proxy {
         const isRoute = this.checkIsRoute(req);
         const ip = this.loggerGetIP(req);
 
-        logger.traffic(`${isRoute ? 'ROUTE ' : ''}${ip} ${req.url}`);
+        this.logger.traffic(`${isRoute ? 'ROUTE ' : ''}${ip} ${req.url}`);
         for (const handler of this.onRequestPipeline) {
             if ((await handler.call(this, req, res, serverInfo, isRoute, isWebsocket)) === true) {
                 return;
