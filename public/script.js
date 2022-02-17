@@ -44,14 +44,17 @@
     }
 
     var api = {
+        needpassword(callback) {
+            get('/needpassword', value => callback(value === 'true'));
+        },
         newsession(callback) {
             get('/newsession', callback);
         },
         editsession(id, httpProxy, callback) {
             get(
                 '/editsession?id=' +
-                    encodeURIComponent(id) +
-                    (httpProxy ? '&httpProxy=' + encodeURIComponent(httpProxy) : ''),
+                encodeURIComponent(id) +
+                (httpProxy ? '&httpProxy=' + encodeURIComponent(httpProxy) : ''),
                 function (res) {
                     if (res !== 'Success') return setError('unexpected response from server. received ' + res);
                     callback();
@@ -195,6 +198,11 @@
         if (currentPort != mainPort) window.location.port = mainPort;
     });
 
+    api.needpassword(doNeed => {
+        if (doNeed) {
+            document.getElementById('password-wrapper').style.display = '';
+        }
+    });
     window.addEventListener('load', function () {
         loadSessions();
 

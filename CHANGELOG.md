@@ -1,3 +1,8 @@
+## v1.0.6
+
+- expose more utils for npm package
+- show password box if needed for html demo
+
 ## v1.0.5
 
 - expose more modules for npm package

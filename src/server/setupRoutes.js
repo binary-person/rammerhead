@@ -19,6 +19,9 @@ module.exports = function setupRoutes(proxyServer, sessionStore, logger) {
         }
         return false;
     };
+    proxyServer.GET('/needpassword', (_req, res) => {
+        res.end(config.password ? 'true' : 'false');
+    });
     proxyServer.GET('/newsession', (req, res) => {
         if (isNotAuthorized(req, res)) return;
 
