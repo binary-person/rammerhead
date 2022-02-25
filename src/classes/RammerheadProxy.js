@@ -348,7 +348,7 @@ class RammerheadProxy extends Proxy {
         // hammerhead's routing does not support websockets. Allowing it
         // will result in an error thrown
         if (isRoute && isWebsocket) {
-            httpResponse.badRequest(req, res, ip, 'Rejected unsupported websocket request');
+            httpResponse.badRequest(this.logger, req, res, ip, 'Rejected unsupported websocket request');
             return;
         }
         super._onRequest(req, res, serverInfo);
@@ -396,7 +396,7 @@ class RammerheadProxy extends Proxy {
             contentType: 'application/x-javascript'
         });
         this.POST('/syncLocalStorage', async (req, res) => {
-            const badRequest = (msg) => httpResponse.badRequest(req, res, this.loggerGetIP(req), msg);
+            const badRequest = (msg) => httpResponse.badRequest(this.logger, req, res, this.loggerGetIP(req), msg);
             const respondJson = (obj) => res.end(JSON.stringify(obj));
             const { sessionId, origin } = new URLPath(req.url).getParams();
 

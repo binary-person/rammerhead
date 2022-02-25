@@ -1,3 +1,7 @@
+## v1.0.61
+
+- fix logger.error undefined (caused by not fully updating arguments for httpResponse.badRequest)
+
 ## v1.0.6
 
 - expose more utils for npm package
