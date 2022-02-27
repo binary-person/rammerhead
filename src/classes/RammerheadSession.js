@@ -39,6 +39,10 @@ class RammerheadSession extends Session {
         //     console.error(err);
         // };
 
+        // disable http2. error handling from http2 proxy client to non-http2 user is too complicated to handle
+        // (status code 0, for example, will crash rammerhead)
+        this.isHttp2Disabled = () => true;
+
         // support localStorage //
         this.injectable.scripts.push('/rammerhead.min.js');
 

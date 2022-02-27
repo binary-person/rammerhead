@@ -1,3 +1,8 @@
+## v1.0.7
+
+- disable http2 support (for proxy to destination sites) because error handling is too complicated to handle
+- removed server headers `report-to` (to avoid proxy url leak) and `cross-origin-embedder-policy` (which fixes reCAPTCHA v3)
+
 ## v1.0.61
 
 - fix logger.error undefined (caused by not fully updating arguments for httpResponse.badRequest)

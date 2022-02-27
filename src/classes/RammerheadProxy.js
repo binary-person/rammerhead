@@ -134,7 +134,9 @@ class RammerheadProxy extends Proxy {
         this.rewriteServerHeaders = {
             'permissions-policy': (headerValue) => headerValue && headerValue.replace(/sync-xhr/g, 'sync-yes'),
             'feature-policy': (headerValue) => headerValue && headerValue.replace(/sync-xhr/g, 'sync-yes'),
-            'referrer-policy': () => 'no-referrer-when-downgrade'
+            'referrer-policy': () => 'no-referrer-when-downgrade',
+            'report-to': () => undefined,
+            'cross-origin-embedder-policy': () => undefined
         };
 
         this.getServerInfo = getServerInfo;
