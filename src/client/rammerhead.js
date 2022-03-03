@@ -11,6 +11,10 @@
     }
 
     function main() {
+        fixUrlRewrite();
+        fixElementGetter();
+
+        // sync localStorage code //
         // consts
         var timestampKey = 'rammerhead_synctimestamp';
         var updateInterval = 5000;
@@ -138,6 +142,53 @@
 
             keyChanges = [];
             return updates;
+        }
+    }
+
+    function fixUrlRewrite() {
+        const port = location.port || (location.protocol === 'https:' ? 443 : 80);
+        const getProxyUrl = window['%hammerhead%'].utils.url.getProxyUrl;
+        window['%hammerhead%'].utils.url.overrideGetProxyUrl(function(url, opts = {}) {
+            if (!opts.proxyPort) {
+                opts.proxyPort = port
+            }
+            return getProxyUrl(url, opts);
+        });
+    }
+    function fixElementGetter() {
+        const fixList = {
+            HTMLAnchorElement: ['href'],
+            HTMLAreaElement: ['href'],
+            HTMLBaseElement: ['href'],
+            HTMLEmbedElement: ['src'],
+            HTMLFormElement: ['action'],
+            HTMLFrameElement: ['src'],
+            HTMLIFrameElement: ['src'],
+            HTMLImageElement: ['src'],
+            HTMLInputElement: ['src'],
+            HTMLLinkElement: ['href'],
+            HTMLMediaElement: ['src'],
+            HTMLModElement: ['cite'],
+            HTMLObjectElement: ['data'],
+            HTMLQuoteElement: ['cite'],
+            HTMLScriptElement: ['src'],
+            HTMLSourceElement: ['src'],
+            HTMLTrackElement: ['src']
+        };
+        const urlRewrite = url => (window["%hammerhead%"].utils.url.parseProxyUrl(url) || {}).destUrl || url;
+        for (const ElementClass in fixList) {
+            for (const attr of fixList[ElementClass]) {
+                if (!window[ElementClass]) {
+                    console.warn('unexpected unsupported element class ' + ElementClass);
+                    continue;
+                }
+                const desc = Object.getOwnPropertyDescriptor(window[ElementClass].prototype, attr);
+                const originalGet = desc.get;
+                desc.get = function () {
+                    return urlRewrite(originalGet.call(this));
+                };
+                Object.defineProperty(window[ElementClass].prototype, attr, desc);
+            }
         }
     }
 

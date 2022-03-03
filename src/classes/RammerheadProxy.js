@@ -13,6 +13,7 @@ const RammerheadLogging = require('../classes/RammerheadLogging');
 
 require('../util/fixCorsHeader');
 require('../util/fixWebsocket');
+require('../util/addMoreErrorGuards');
 
 /**
  * taken directly from
@@ -394,7 +395,7 @@ class RammerheadProxy extends Proxy {
      */
     _setupLocalStorageServiceRoutes() {
         this.GET('/rammerhead.min.js', {
-            content: fs.readFileSync(path.join(__dirname, '../client/rammerhead.min.js')),
+            content: fs.readFileSync(path.join(__dirname, '../client/rammerhead' + (process.env.DEVELOPMENT ? '.js' : '.min.js'))),
             contentType: 'application/x-javascript'
         });
         this.POST('/syncLocalStorage', async (req, res) => {

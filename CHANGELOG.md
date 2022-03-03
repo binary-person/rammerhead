@@ -1,3 +1,10 @@
+## v1.0.8
+
+- handle websocket EPIPE error
+- replace hammerhead's connection reset guard with a non-crashing rammerhead's reset guard
+- add missing element attr getter unrewrite
+- fix url rewriting for ports 80 and 443
+
 ## v1.0.7
 
 - disable http2 support (for proxy to destination sites) because error handling is too complicated to handle
