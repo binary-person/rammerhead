@@ -1,3 +1,11 @@
+## v1.1.0
+
+- handle ECONNRESET manually
+- bring back MemoryStore class for module exports
+- add server option to disable localStorage syncing
+- fix `RammerheadSessionFileCache` not saving cache to disk correctly
+- add url encoding
+
 ## v1.0.8
 
 - handle websocket EPIPE error

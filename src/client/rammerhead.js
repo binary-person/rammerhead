@@ -1,13 +1,15 @@
-// since hammerhead is es5, we'll follow that also to avoid losing compatibility
 (function () {
     var hammerhead = window['%hammerhead%'];
     if (!hammerhead) throw new Error('hammerhead not loaded yet');
     if (hammerhead.settings._settings.sessionId) {
         // task.js already loaded. this will likely never happen though since this file loads before task.js
+        console.warn('unexpected task.js to laod before rammerhead.js. url shuffling cannot be used');
         main();
     } else {
         // wait for task.js to load
         hookHammerheadStartOnce(main);
+        // before task.js, we need to add url shuffling
+        addUrlShuffling();
     }
 
     function main() {
@@ -15,6 +17,11 @@
         fixElementGetter();
 
         // sync localStorage code //
+        // disable if other code wants to implement their own localStorage site wrapper
+        if (window.rammerheadDisableLocalStorageImplementation) {
+            delete window.rammerheadDisableLocalStorageImplementation;
+            return;
+        }
         // consts
         var timestampKey = 'rammerhead_synctimestamp';
         var updateInterval = 5000;
@@ -26,7 +33,14 @@
         var origin = window.__get$(window, 'location').origin;
         var keyChanges = [];
 
-        syncLocalStorage();
+        try {
+            syncLocalStorage();
+        } catch (e) {
+            if (e.message !== 'server wants to disable localStorage syncing') {
+                throw e;
+            }
+            return;
+        }
         proxiedLocalStorage.addChangeEventListener(function (event) {
             if (isSyncing) return;
             if (keyChanges.indexOf(event.key) === -1) keyChanges.push(event.key);
@@ -117,6 +131,9 @@
             request.setRequestHeader('content-type', 'application/json');
             request.send(JSON.stringify(data));
             function check() {
+                if (request.status === 404) {
+                    throw new Error('server wants to disable localStorage syncing');
+                }
                 if (request.status !== 200)
                     throw new Error(
                         'server sent a non 200 code. got ' + request.status + '. Response: ' + request.responseText
@@ -145,10 +162,124 @@
         }
     }
 
+    var noShuffling = false;
+    function addUrlShuffling() {
+        const request = new XMLHttpRequest();
+        const sessionId = (location.pathname.slice(1).match(/^[a-z0-9]+/i) || [])[0];
+        if (!sessionId) {
+            console.warn('cannot get session id from url');
+            return;
+        }
+        request.open('GET', '/api/shuffleDict?id=' + sessionId, false);
+        request.send();
+        if (request.status !== 200) {
+            console.warn(`received a non 200 status code while trying to fetch shuffleDict:\nstatus: ${request.status}\nresponse: ${request.responseText}`);
+            return;
+        }
+        const shuffleDict = JSON.parse(request.responseText);
+        if (!shuffleDict) return;
+
+        // pasting entire thing here "because lazy" - m28
+        const mod = (n, m) => ((n % m) + m) % m;
+        class StrShuffler {
+            static baseDictionary = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~-';
+            static shuffledIndicator = '_rhs';
+            static generateDictionary() {
+                let str = '';
+                const split = StrShuffler.baseDictionary.split('');
+                while (split.length > 0) {
+                    str += split.splice(Math.floor(Math.random() * split.length), 1)[0];
+                }
+                return str;
+            }
+
+            constructor(dictionary = StrShuffler.generateDictionary()) {
+                this.dictionary = dictionary;
+            }
+            shuffle(str) {
+                if (str.startsWith(StrShuffler.shuffledIndicator)) {
+                    return str;
+                }
+                let shuffledStr = '';
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charAt(i);
+                    const idx = StrShuffler.baseDictionary.indexOf(char);
+                    if (idx === -1) {
+                        shuffledStr += char;
+                    } else {
+                        shuffledStr += this.dictionary.charAt(mod(idx + i, StrShuffler.baseDictionary.length));
+                    }
+                }
+                return StrShuffler.shuffledIndicator + shuffledStr;
+            }
+            unshuffle(str) {
+                if (!str.startsWith(StrShuffler.shuffledIndicator)) {
+                    return str;
+                }
+
+                str = str.slice(StrShuffler.shuffledIndicator.length);
+
+                let unshuffledStr = '';
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charAt(i);
+                    const idx = this.dictionary.indexOf(char);
+                    if (idx === -1) {
+                        unshuffledStr += char;
+                    } else {
+                        unshuffledStr += StrShuffler.baseDictionary.charAt(mod(idx - i, StrShuffler.baseDictionary.length));
+                    }
+                }
+                return unshuffledStr;
+            }
+        }
+
+        const replaceUrl = (url, replacer) => {
+            //        regex:              https://google.com/    sessionid/   url
+            return (url || '').replace(/^((?:[a-z0-9]+:\/\/[^/]+)?(?:\/[^/]+\/))([^]+)/i, function (_, g1, g2) {
+                return g1 + replacer(g2);
+            })
+        };
+        const shuffler = new StrShuffler(shuffleDict);
+        window.shuffler = shuffler;
+
+
+        // shuffle current url if it isn't already shuffled (unshuffled urls likely come from user input)
+        const oldUrl = location.href;
+        const newUrl = replaceUrl(location.href, url => shuffler.shuffle(url));
+        if (oldUrl !== newUrl) {
+            history.replaceState(null, null, newUrl);
+        }
+
+        const getProxyUrl = window['%hammerhead%'].utils.url.getProxyUrl;
+        const parseProxyUrl = window['%hammerhead%'].utils.url.parseProxyUrl;
+        window['%hammerhead%'].utils.url.overrideGetProxyUrl(function (url, opts) {
+            if (noShuffling) {
+                return getProxyUrl(url, opts);
+            }
+            return replaceUrl(getProxyUrl(url, opts), u => shuffler.shuffle(u), true);
+        });
+        window['%hammerhead%'].utils.url.overrideParseProxyUrl(function (url) {
+            return parseProxyUrl(replaceUrl(url, u => shuffler.unshuffle(u), false));
+        });
+        // //
+        const getProxyUrl$1 = window['%hammerhead%'].sharedUtils.url.getProxyUrl;
+        const parseProxyUrl$1 = window['%hammerhead%'].sharedUtils.url.parseProxyUrl;
+        window.overrideGetProxyUrl(function (url, opts) {
+            if (noShuffling) {
+                return getProxyUrl$1(url, opts);
+            }
+            return replaceUrl(getProxyUrl$1(url, opts), u => shuffler.shuffle(u), true);
+        });
+        delete window.overrideGetProxyUrl;
+        window.overrideParseProxyUrl(function (url) {
+            return parseProxyUrl$1(replaceUrl(url, u => shuffler.unshuffle(u), false));
+        });
+        delete window.overrideParseProxyUrl;
+    }
     function fixUrlRewrite() {
         const port = location.port || (location.protocol === 'https:' ? 443 : 80);
         const getProxyUrl = window['%hammerhead%'].utils.url.getProxyUrl;
-        window['%hammerhead%'].utils.url.overrideGetProxyUrl(function(url, opts = {}) {
+        window['%hammerhead%'].utils.url.overrideGetProxyUrl(function (url, opts = {}) {
             if (!opts.proxyPort) {
                 opts.proxyPort = port
             }
@@ -187,6 +318,21 @@
                 desc.get = function () {
                     return urlRewrite(originalGet.call(this));
                 };
+                if (attr === 'action') {
+                    const originalSet = desc.set;
+                    // don't shuffle form action urls
+                    desc.set = function (value) {
+                        noShuffling = true;
+                        try {
+                            var returnVal = originalSet.call(this, value);
+                        } catch (e) {
+                            noShuffling = false;
+                            throw e;
+                        }
+                        noShuffling = false;
+                        return returnVal;
+                    };
+                }
                 Object.defineProperty(window[ElementClass].prototype, attr, desc);
             }
         }

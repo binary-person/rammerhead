@@ -21,7 +21,8 @@ const proxyServer = new RammerheadProxy({
     port: config.port,
     crossDomainPort: config.crossDomainPort,
     ssl: config.ssl,
-    getServerInfo: config.getServerInfo
+    getServerInfo: config.getServerInfo,
+    disableLocalStorageSync: config.disableLocalStorageSync
 });
 
 if (config.publicDir) addStaticDirToProxy(proxyServer, config.publicDir);

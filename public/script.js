@@ -1,4 +1,57 @@
 (function () {
+    const mod = (n, m) => ((n % m) + m) % m;
+    class StrShuffler {
+        static baseDictionary = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~-';
+        static shuffledIndicator = '_rhs';
+        static generateDictionary() {
+            let str = '';
+            const split = StrShuffler.baseDictionary.split('');
+            while (split.length > 0) {
+                str += split.splice(Math.floor(Math.random() * split.length), 1)[0];
+            }
+            return str;
+        }
+
+        constructor(dictionary = StrShuffler.generateDictionary()) {
+            this.dictionary = dictionary;
+        }
+        shuffle(str) {
+            if (str.startsWith(StrShuffler.shuffledIndicator)) {
+                return str;
+            }
+            let shuffledStr = '';
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charAt(i);
+                const idx = StrShuffler.baseDictionary.indexOf(char);
+                if (idx === -1) {
+                    shuffledStr += char;
+                } else {
+                    shuffledStr += this.dictionary.charAt(mod(idx + i, StrShuffler.baseDictionary.length));
+                }
+            }
+            return StrShuffler.shuffledIndicator + shuffledStr;
+        }
+        unshuffle(str) {
+            if (!str.startsWith(StrShuffler.shuffledIndicator)) {
+                return str;
+            }
+
+            str = str.slice(StrShuffler.shuffledIndicator.length);
+
+            let unshuffledStr = '';
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charAt(i);
+                const idx = this.dictionary.indexOf(char);
+                if (idx === -1) {
+                    unshuffledStr += char;
+                } else {
+                    unshuffledStr += StrShuffler.baseDictionary.charAt(mod(idx - i, StrShuffler.baseDictionary.length));
+                }
+            }
+            return unshuffledStr;
+        }
+    }
+
     function setError(err) {
         var element = document.getElementById('error-text');
         if (err) {
@@ -50,11 +103,12 @@
         newsession(callback) {
             get('/newsession', callback);
         },
-        editsession(id, httpProxy, callback) {
+        editsession(id, httpProxy, enableShuffling, callback) {
             get(
                 '/editsession?id=' +
                 encodeURIComponent(id) +
-                (httpProxy ? '&httpProxy=' + encodeURIComponent(httpProxy) : ''),
+                (httpProxy ? '&httpProxy=' + encodeURIComponent(httpProxy) : '') +
+                '&enableShuffling=' + (enableShuffling ? '1' : '0'),
                 function (res) {
                     if (res !== 'Success') return setError('unexpected response from server. received ' + res);
                     callback();
@@ -79,6 +133,11 @@
                 } else {
                     callback();
                 }
+            });
+        },
+        shuffleDict(id, callback) {
+            get('/api/shuffleDict?id=' + encodeURIComponent(id), function (res) {
+                callback(JSON.parse(res));
             });
         }
     };
@@ -166,6 +225,7 @@
     function loadSettings(session) {
         document.getElementById('session-id').value = session.id;
         document.getElementById('session-httpproxy').value = session.httpproxy || '';
+        document.getElementById('session-shuffling').checked = typeof session.enableShuffling === 'boolean' ? session.enableShuffling : true;
     }
     function loadSessions() {
         var sessions = sessionIdsStore.get();
@@ -179,11 +239,12 @@
         sessionIdsStore.set(data);
         renderSessionTable(data);
     }
-    function editSession(id, httpproxy) {
+    function editSession(id, httpproxy, enableShuffling) {
         var data = sessionIdsStore.get();
         for (var i = 0; i < data.length; i++) {
             if (data[i].id === id) {
                 data[i].httpproxy = httpproxy;
+                data[i].enableShuffling = enableShuffling;
                 sessionIdsStore.set(data);
                 return;
             }
@@ -227,13 +288,21 @@
             setError();
             var id = document.getElementById('session-id').value;
             var httpproxy = document.getElementById('session-httpproxy').value;
+            var enableShuffling = document.getElementById('session-shuffling').checked;
             var url = document.getElementById('session-url').value || 'https://www.google.com/';
             if (!id) return setError('must generate a session id first');
             api.sessionexists(id, function (value) {
                 if (!value) return setError('session does not exist. try deleting or generating a new session');
-                api.editsession(id, httpproxy, function () {
-                    editSession(id, httpproxy);
-                    window.location.href = '/' + id + '/' + url;
+                api.editsession(id, httpproxy, enableShuffling, function () {
+                    editSession(id, httpproxy, enableShuffling);
+                    api.shuffleDict(id, function (shuffleDict) {
+                        if (!shuffleDict) {
+                            window.location.href = '/' + id + '/' + url;
+                        } else {
+                            var shuffler = new StrShuffler(shuffleDict);
+                            window.location.href = '/' + id + '/' + shuffler.shuffle(url);
+                        }
+                    });
                 });
             });
         }

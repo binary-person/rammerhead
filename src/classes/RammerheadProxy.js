@@ -14,6 +14,7 @@ const RammerheadLogging = require('../classes/RammerheadLogging');
 require('../util/fixCorsHeader');
 require('../util/fixWebsocket');
 require('../util/addMoreErrorGuards');
+require('../util/addUrlShuffling');
 
 /**
  * taken directly from
@@ -56,6 +57,7 @@ class RammerheadProxy extends Proxy {
      * @param {(req: http.IncomingMessage) => RammerheadServerInfo} options.getServerInfo - force hammerhead to rewrite using specified
      * server info (server info includes hostname, port, and protocol). Useful for a reverse proxy setup like nginx where you
      * need to rewrite the hostname/port/protocol
+     * @param {boolean} options.disableLocalStorageSync - disables localStorage syncing (default: false)
      */
     constructor({
         loggerGetIP = (req) => req.socket.remoteAddress,
@@ -71,7 +73,8 @@ class RammerheadProxy extends Proxy {
                 port,
                 protocol: req.socket.encrypted ? 'https:' : 'http:'
             };
-        }
+        },
+        disableLocalStorageSync = false
     } = {}) {
         if (!crossDomainPort) {
             const httpOrHttps = ssl ? https : http;
@@ -84,7 +87,7 @@ class RammerheadProxy extends Proxy {
             // a downside to using only one proxy server is that crossdomain requests
             // will not be simulated correctly
             proxyHttpOrHttps.createServer = function (...args) {
-                const emptyFunc = () => {};
+                const emptyFunc = () => { };
                 if (onlyOneHttpServer) {
                     // createServer for server1 already called. now we return a mock http server for server2
                     return { on: emptyFunc, listen: emptyFunc, close: emptyFunc };
@@ -104,7 +107,7 @@ class RammerheadProxy extends Proxy {
             // the values don't matter (except for developmentMode), since we'll be rewriting serverInfo anyway
             super('hostname', 'port', 'port', {
                 ssl,
-                developmentMode: !!process.env.DEVELOPMENT,
+                developmentMode: true,
                 cache: true
             });
 
@@ -120,14 +123,18 @@ class RammerheadProxy extends Proxy {
             };
             super('doesntmatter', port, crossDomainPort, {
                 ssl,
-                developmentMode: !!process.env.DEVELOPMENT,
+                developmentMode: true,
                 cache: true
             });
             this.crossDomainPort = crossDomainPort;
             http.Server.prototype.listen = originalListen;
         }
 
-        this._setupLocalStorageServiceRoutes();
+
+        this._setupRammerheadServiceRoutes();
+        if (!disableLocalStorageSync) {
+            this._setupLocalStorageServiceRoutes();
+        }
 
         this.onRequestPipeline = [];
         this.onUpgradePipeline = [];
@@ -393,11 +400,23 @@ class RammerheadProxy extends Proxy {
     /**
      * @private
      */
-    _setupLocalStorageServiceRoutes() {
+     _setupRammerheadServiceRoutes() {
         this.GET('/rammerhead.min.js', {
             content: fs.readFileSync(path.join(__dirname, '../client/rammerhead' + (process.env.DEVELOPMENT ? '.js' : '.min.js'))),
             contentType: 'application/x-javascript'
         });
+        this.GET('/api/shuffleDict', (req, res) => {
+            const { id } = new URLPath(req.url).getParams();
+            if (!id || !this.openSessions.has(id)) {
+                return httpResponse.badRequest(this.logger, req, res, this.loggerGetIP(req), 'Invalid session id');
+            }
+            res.end(JSON.stringify(this.openSessions.get(id).shuffleDict) || '');
+        });
+    }
+    /**
+     * @private
+     */
+    _setupLocalStorageServiceRoutes() {
         this.POST('/syncLocalStorage', async (req, res) => {
             const badRequest = (msg) => httpResponse.badRequest(this.logger, req, res, this.loggerGetIP(req), msg);
             const respondJson = (obj) => res.end(JSON.stringify(obj));
@@ -504,14 +523,21 @@ class RammerheadProxy extends Proxy {
         this.openSessions.close();
     }
 
-    // the following is to fix hamerhead's typescript definitions
     /**
      * @param {string} route
      * @param {StaticContent | (req: http.IncomingMessage, res: http.ServerResponse) => void} handler
      */
     GET(route, handler) {
+        if (route === '/hammerhead.js') {
+            // modify unmodifable items that cannot be hooked in rammerhead.js
+            handler.content = handler.content
+                .replace('function parseProxyUrl$1', 'window.overrideParseProxyUrl = function(func) {parseProxyUrl$$1 = func}; $&')
+                .replace('function getProxyUrl$1', 'window.overrideGetProxyUrl = function(func) {getProxyUrl$$1 = func}; $&');
+        }
         super.GET(route, handler);
     }
+
+    // the following is to fix hamerhead's typescript definitions
     /**
      * @param {string} route
      * @param {StaticContent | (req: http.IncomingMessage, res: http.ServerResponse) => void} handler

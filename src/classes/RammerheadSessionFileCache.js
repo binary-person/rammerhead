@@ -117,9 +117,16 @@ class RammerheadSessionFileCache extends RammerheadSessionAbstractStore {
         this.logger.debug(`(FileCache.delete) ${id} does not exist`);
         return false;
     }
+    addSerializedSession(id, serializedSession) {
+        this.logger.debug(`(FileCache.addSerializedSession) adding serialized session id ${id} to store`);
+        const session = RammerheadSession.DeserializeSession(id, serializedSession);
+        session.updateLastUsed();
+        this.cachedSessions.set(id, session);
+        this.logger.debug(`(FileCache.addSerializedSession) added ${id} to cache`);
+    }
     close() {
         this.logger.debug(`(FileCache.close) calling _saveCacheToDisk`);
-        this._saveCacheToDisk(-1);
+        this._saveCacheToDisk(true);
     }
 
     /**
@@ -158,13 +165,13 @@ class RammerheadSessionFileCache extends RammerheadSessionAbstractStore {
     /**
      * @private
      */
-    _saveCacheToDisk() {
+    _saveCacheToDisk(forceSave) {
         let deleteCount = 0;
         this.logger.debug(`(FileCache._saveCacheToDisk) need to go through ${this.cachedSessions.size} sessions`);
 
         const now = Date.now();
         for (const [sessionId, session] of this.cachedSessions) {
-            if (now - session.lastUsed > this.cacheTimeout) {
+            if (forceSave || now - session.lastUsed > this.cacheTimeout) {
                 if (session.lastUsed === session.createdAt && this.deleteUnused) {
                     this.cachedSessions.delete(sessionId);
                     deleteCount++;

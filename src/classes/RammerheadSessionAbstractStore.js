@@ -84,6 +84,14 @@ class RammerheadSessionAbstractStore {
         this._mustImplement();
     }
     /**
+     * @abstract
+     * @param {string} id
+     * @param {string} serializedSession
+     */
+    addSerializedSession(id, serializedSession) {
+        this._mustImplement();
+    }
+    /**
      * optional abstract method
      */
     close() {}

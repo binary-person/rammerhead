@@ -1,9 +1,10 @@
 const { Session } = require('testcafe-hammerhead');
 const UploadStorage = require('testcafe-hammerhead/lib/upload/storage');
 const generateId = require('../util/generateId');
+const StrShuffler = require('../util/StrShuffler');
 
 // disable UploadStorage, a testcafe testing feature we do not need
-const emptyFunc = () => {};
+const emptyFunc = () => { };
 UploadStorage.prototype.copy = emptyFunc;
 UploadStorage.prototype.get = emptyFunc;
 UploadStorage.prototype.store = emptyFunc;
@@ -19,9 +20,10 @@ class RammerheadSession extends Session {
     /**
      * @param {object} options
      * @param {string} options.id
-     * @param {boolean} options.dontConnectToData - used when we want to connect to data later (or simply don't wnat to)
+     * @param {boolean} options.dontConnectToData - used when we want to connect to data later (or simply don't want to)
+     * @param {boolean} options.disableShuffling
      */
-    constructor({ id = generateId(), dontConnectToData = false } = {}) {
+    constructor({ id = generateId(), dontConnectToData = false, disableShuffling = false } = {}) {
         super(['blah/blah'], {
             allowMultipleWindows: true,
             disablePageCaching: false
@@ -47,6 +49,7 @@ class RammerheadSession extends Session {
         this.injectable.scripts.push('/rammerhead.min.js');
 
         this.id = id;
+        this.shuffleDict = disableShuffling ? null : StrShuffler.generateDictionary();
         if (!dontConnectToData) {
             this.connectHammerheadToData();
         }
@@ -60,6 +63,7 @@ class RammerheadSession extends Session {
         this._connectObjectToHook(this, 'lastUsed');
         this._connectObjectToHook(this, 'injectable');
         this._connectObjectToHook(this, 'externalProxySettings');
+        this._connectObjectToHook(this, 'shuffleDict');
         if (!dontCookie) this._connectObjectToHook(this.cookies._cookieJar.store, 'idx', 'cookies');
     }
 
@@ -81,6 +85,9 @@ class RammerheadSession extends Session {
 
         const session = new RammerheadSession({ id, dontConnectToData: true });
         session.data = parsed.data;
+        if (!('shuffleDict' in session.data)) { // here only for updating old versioned sessions
+            session.data.shuffleDict = null;
+        }
         session.connectHammerheadToData(true);
         session.cookies.setJar(parsed.serializedCookieJar);
         return session;

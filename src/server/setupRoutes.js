@@ -2,6 +2,7 @@ const generateId = require('../util/generateId');
 const URLPath = require('../util/URLPath');
 const httpResponse = require('../util/httpResponse');
 const config = require('../config');
+const StrShuffler = require('../util/StrShuffler');
 
 /**
  *
@@ -32,7 +33,7 @@ module.exports = function setupRoutes(proxyServer, sessionStore, logger) {
     proxyServer.GET('/editsession', (req, res) => {
         if (isNotAuthorized(req, res)) return;
 
-        let { id, httpProxy } = new URLPath(req.url).getParams();
+        let { id, httpProxy, enableShuffling } = new URLPath(req.url).getParams();
 
         if (!id || !sessionStore.has(id)) {
             return httpResponse.badRequest(logger, req, res, config.getIP(req), 'not found');
@@ -45,6 +46,12 @@ module.exports = function setupRoutes(proxyServer, sessionStore, logger) {
                 httpProxy = httpProxy.slice(7);
             }
             session.setExternalProxySettings(httpProxy);
+        }
+        if (enableShuffling === '1' && !session.shuffleDict) {
+            session.shuffleDict = StrShuffler.generateDictionary();
+        }
+        if (enableShuffling === '0') {
+            session.shuffleDict = null;
         }
 
         res.end('Success');
