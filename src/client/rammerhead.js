@@ -173,7 +173,9 @@
         request.open('GET', '/api/shuffleDict?id=' + sessionId, false);
         request.send();
         if (request.status !== 200) {
-            console.warn(`received a non 200 status code while trying to fetch shuffleDict:\nstatus: ${request.status}\nresponse: ${request.responseText}`);
+            console.warn(
+                `received a non 200 status code while trying to fetch shuffleDict:\nstatus: ${request.status}\nresponse: ${request.responseText}`
+            );
             return;
         }
         const shuffleDict = JSON.parse(request.responseText);
@@ -226,7 +228,9 @@
                     if (idx === -1) {
                         unshuffledStr += char;
                     } else {
-                        unshuffledStr += StrShuffler.baseDictionary.charAt(mod(idx - i, StrShuffler.baseDictionary.length));
+                        unshuffledStr += StrShuffler.baseDictionary.charAt(
+                            mod(idx - i, StrShuffler.baseDictionary.length)
+                        );
                     }
                 }
                 return unshuffledStr;
@@ -237,15 +241,14 @@
             //        regex:              https://google.com/    sessionid/   url
             return (url || '').replace(/^((?:[a-z0-9]+:\/\/[^/]+)?(?:\/[^/]+\/))([^]+)/i, function (_, g1, g2) {
                 return g1 + replacer(g2);
-            })
+            });
         };
         const shuffler = new StrShuffler(shuffleDict);
         window.shuffler = shuffler;
 
-
         // shuffle current url if it isn't already shuffled (unshuffled urls likely come from user input)
         const oldUrl = location.href;
-        const newUrl = replaceUrl(location.href, url => shuffler.shuffle(url));
+        const newUrl = replaceUrl(location.href, (url) => shuffler.shuffle(url));
         if (oldUrl !== newUrl) {
             history.replaceState(null, null, newUrl);
         }
@@ -256,10 +259,10 @@
             if (noShuffling) {
                 return getProxyUrl(url, opts);
             }
-            return replaceUrl(getProxyUrl(url, opts), u => shuffler.shuffle(u), true);
+            return replaceUrl(getProxyUrl(url, opts), (u) => shuffler.shuffle(u), true);
         });
         window['%hammerhead%'].utils.url.overrideParseProxyUrl(function (url) {
-            return parseProxyUrl(replaceUrl(url, u => shuffler.unshuffle(u), false));
+            return parseProxyUrl(replaceUrl(url, (u) => shuffler.unshuffle(u), false));
         });
         // //
         const getProxyUrl$1 = window['%hammerhead%'].sharedUtils.url.getProxyUrl;
@@ -268,11 +271,11 @@
             if (noShuffling) {
                 return getProxyUrl$1(url, opts);
             }
-            return replaceUrl(getProxyUrl$1(url, opts), u => shuffler.shuffle(u), true);
+            return replaceUrl(getProxyUrl$1(url, opts), (u) => shuffler.shuffle(u), true);
         });
         delete window.overrideGetProxyUrl;
         window.overrideParseProxyUrl(function (url) {
-            return parseProxyUrl$1(replaceUrl(url, u => shuffler.unshuffle(u), false));
+            return parseProxyUrl$1(replaceUrl(url, (u) => shuffler.unshuffle(u), false));
         });
         delete window.overrideParseProxyUrl;
     }
@@ -281,7 +284,7 @@
         const getProxyUrl = window['%hammerhead%'].utils.url.getProxyUrl;
         window['%hammerhead%'].utils.url.overrideGetProxyUrl(function (url, opts = {}) {
             if (!opts.proxyPort) {
-                opts.proxyPort = port
+                opts.proxyPort = port;
             }
             return getProxyUrl(url, opts);
         });
@@ -306,7 +309,7 @@
             HTMLSourceElement: ['src'],
             HTMLTrackElement: ['src']
         };
-        const urlRewrite = url => (window["%hammerhead%"].utils.url.parseProxyUrl(url) || {}).destUrl || url;
+        const urlRewrite = (url) => (window['%hammerhead%'].utils.url.parseProxyUrl(url) || {}).destUrl || url;
         for (const ElementClass in fixList) {
             for (const attr of fixList[ElementClass]) {
                 if (!window[ElementClass]) {

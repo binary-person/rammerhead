@@ -87,7 +87,7 @@ class RammerheadProxy extends Proxy {
             // a downside to using only one proxy server is that crossdomain requests
             // will not be simulated correctly
             proxyHttpOrHttps.createServer = function (...args) {
-                const emptyFunc = () => { };
+                const emptyFunc = () => {};
                 if (onlyOneHttpServer) {
                     // createServer for server1 already called. now we return a mock http server for server2
                     return { on: emptyFunc, listen: emptyFunc, close: emptyFunc };
@@ -129,7 +129,6 @@ class RammerheadProxy extends Proxy {
             this.crossDomainPort = crossDomainPort;
             http.Server.prototype.listen = originalListen;
         }
-
 
         this._setupRammerheadServiceRoutes();
         if (!disableLocalStorageSync) {
@@ -400,9 +399,11 @@ class RammerheadProxy extends Proxy {
     /**
      * @private
      */
-     _setupRammerheadServiceRoutes() {
+    _setupRammerheadServiceRoutes() {
         this.GET('/rammerhead.min.js', {
-            content: fs.readFileSync(path.join(__dirname, '../client/rammerhead' + (process.env.DEVELOPMENT ? '.js' : '.min.js'))),
+            content: fs.readFileSync(
+                path.join(__dirname, '../client/rammerhead' + (process.env.DEVELOPMENT ? '.js' : '.min.js'))
+            ),
             contentType: 'application/x-javascript'
         });
         this.GET('/api/shuffleDict', (req, res) => {
@@ -531,8 +532,14 @@ class RammerheadProxy extends Proxy {
         if (route === '/hammerhead.js') {
             // modify unmodifable items that cannot be hooked in rammerhead.js
             handler.content = handler.content
-                .replace('function parseProxyUrl$1', 'window.overrideParseProxyUrl = function(func) {parseProxyUrl$$1 = func}; $&')
-                .replace('function getProxyUrl$1', 'window.overrideGetProxyUrl = function(func) {getProxyUrl$$1 = func}; $&');
+                .replace(
+                    'function parseProxyUrl$1',
+                    'window.overrideParseProxyUrl = function(func) {parseProxyUrl$$1 = func}; $&'
+                )
+                .replace(
+                    'function getProxyUrl$1',
+                    'window.overrideGetProxyUrl = function(func) {getProxyUrl$$1 = func}; $&'
+                );
         }
         super.GET(route, handler);
     }

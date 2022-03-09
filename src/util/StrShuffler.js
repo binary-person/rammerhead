@@ -12,7 +12,7 @@ for (let i = 32; i <= 126; i++) {
 
 const mod = (n, m) => ((n % m) + m) % m;
 class StrShuffler {
-    static baseDictionary = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~-";
+    static baseDictionary = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~-';
     static shuffledIndicator = '_rhs';
     static generateDictionary() {
         let str = '';

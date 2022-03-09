@@ -4,7 +4,7 @@ const generateId = require('../util/generateId');
 const StrShuffler = require('../util/StrShuffler');
 
 // disable UploadStorage, a testcafe testing feature we do not need
-const emptyFunc = () => { };
+const emptyFunc = () => {};
 UploadStorage.prototype.copy = emptyFunc;
 UploadStorage.prototype.get = emptyFunc;
 UploadStorage.prototype.store = emptyFunc;
@@ -85,7 +85,8 @@ class RammerheadSession extends Session {
 
         const session = new RammerheadSession({ id, dontConnectToData: true });
         session.data = parsed.data;
-        if (!('shuffleDict' in session.data)) { // here only for updating old versioned sessions
+        if (!('shuffleDict' in session.data)) {
+            // here only for updating old versioned sessions
             session.data.shuffleDict = null;
         }
         session.connectHammerheadToData(true);

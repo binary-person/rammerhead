@@ -6,7 +6,7 @@ const replaceUrl = (url, replacer) => {
     //        regex:              https://google.com/    sessionid/   url
     return (url || '').replace(/^((?:[a-z0-9]+:\/\/[^/]+)?(?:\/[^/]+\/))([^]+)/i, function (_, g1, g2) {
         return g1 + replacer(g2);
-    })
+    });
 };
 
 // unshuffle incoming url //
@@ -21,9 +21,11 @@ RequestPipelineContext.prototype.dispatch = function (openSessions) {
     }
     if (session && session.shuffleDict) {
         const shuffler = new StrShuffler(session.shuffleDict);
-        this.req.url = replaceUrl(this.req.url, url => shuffler.unshuffle(url));
+        this.req.url = replaceUrl(this.req.url, (url) => shuffler.unshuffle(url));
         if (getSessionId(this.req.headers[BUILTIN_HEADERS.referer]) === sessionId) {
-            this.req.headers[BUILTIN_HEADERS.referer] = replaceUrl(this.req.headers[BUILTIN_HEADERS.referer], url => shuffler.unshuffle(url));
+            this.req.headers[BUILTIN_HEADERS.referer] = replaceUrl(this.req.headers[BUILTIN_HEADERS.referer], (url) =>
+                shuffler.unshuffle(url)
+            );
         }
     }
 
@@ -39,7 +41,7 @@ RequestPipelineContext.prototype.toProxyUrl = function (...args) {
     if (!this.session.shuffleDict || disableShuffling) return proxyUrl;
 
     const shuffler = new StrShuffler(this.session.shuffleDict);
-    return replaceUrl(proxyUrl, url => shuffler.shuffle(url));
+    return replaceUrl(proxyUrl, (url) => shuffler.shuffle(url));
 };
 
 // unshuffle task.js referer header
@@ -52,7 +54,9 @@ Proxy.prototype._onTaskScriptRequest = async function _onTaskScriptRequest(req, 
     const session = sessionId && this.openSessions.get(sessionId);
     if (session && session.shuffleDict) {
         const shuffler = new StrShuffler(session.shuffleDict);
-        req.headers[BUILTIN_HEADERS.referer] = replaceUrl(req.headers[BUILTIN_HEADERS.referer], url => shuffler.unshuffle(url));
+        req.headers[BUILTIN_HEADERS.referer] = replaceUrl(req.headers[BUILTIN_HEADERS.referer], (url) =>
+            shuffler.unshuffle(url)
+        );
     }
     return __onTaskScriptRequest.call(this, req, ...args);
 };
@@ -69,4 +73,4 @@ DomProcessor.prototype._processUrlAttrs = function _processUrlAttrs(el, urlRepla
         disableShuffling = false;
         throw e;
     }
-}
+};
