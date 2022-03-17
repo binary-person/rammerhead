@@ -1,3 +1,10 @@
+## v1.1.1
+
+- fix uncatchable connection crash errors
+- avoid shuffling percent encodings
+- prevent forwarding localStorage endpoint to site by referrer
+- fix (un)shuffle for location.hash and location.search
+
 ## v1.1.0
 
 - handle ECONNRESET manually

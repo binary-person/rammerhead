@@ -9,7 +9,8 @@ hGuard.isConnectionResetError = function (err) {
         isConnectionResetError(err) ||
         err.code === 'ERR_INVALID_PROTOCOL' ||
         err.code === 'ETIMEDOUT' ||
-        err.code === 'ECONNRESET'
+        err.code === 'ECONNRESET' ||
+        err.code === 'EPIPE'
     ) {
         return true;
     }
@@ -17,3 +18,15 @@ hGuard.isConnectionResetError = function (err) {
     // never return false as to avoid crashing the server
     return true;
 };
+
+process.on('uncaughtException', err => {
+    // for some reason, the above never catches all of the errors. this is a last resort failsafe
+    if (err.message.includes('ECONN') || err.message.includes('EPIPE') || err.message.includes('ETIMEDOUT') || err.message.includes('ERR_INVALID_')) {
+        // crash avoided!
+        console.error('Avoided crash:' + err.message);
+    } else {
+        // probably a TypeError or something important
+        console.error('About to throw: ' + err.message);
+        throw err;
+    }
+});

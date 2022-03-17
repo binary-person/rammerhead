@@ -1,7 +1,7 @@
 node_modules/
 
 # don't commit generated builds or env files
-src/client/rammerhead.min.js
+src/client/*.min.*
 .env
 
 # don't commit session data

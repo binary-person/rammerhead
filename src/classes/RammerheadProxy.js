@@ -87,7 +87,7 @@ class RammerheadProxy extends Proxy {
             // a downside to using only one proxy server is that crossdomain requests
             // will not be simulated correctly
             proxyHttpOrHttps.createServer = function (...args) {
-                const emptyFunc = () => {};
+                const emptyFunc = () => { };
                 if (onlyOneHttpServer) {
                     // createServer for server1 already called. now we return a mock http server for server2
                     return { on: emptyFunc, listen: emptyFunc, close: emptyFunc };
@@ -131,9 +131,7 @@ class RammerheadProxy extends Proxy {
         }
 
         this._setupRammerheadServiceRoutes();
-        if (!disableLocalStorageSync) {
-            this._setupLocalStorageServiceRoutes();
-        }
+        this._setupLocalStorageServiceRoutes(disableLocalStorageSync);
 
         this.onRequestPipeline = [];
         this.onUpgradePipeline = [];
@@ -402,7 +400,7 @@ class RammerheadProxy extends Proxy {
     _setupRammerheadServiceRoutes() {
         this.GET('/rammerhead.min.js', {
             content: fs.readFileSync(
-                path.join(__dirname, '../client/rammerhead' + (process.env.DEVELOPMENT ? '.js' : '.min.js'))
+                path.join(__dirname, '../client/rammerhead.min.js')
             ),
             contentType: 'application/x-javascript'
         });
@@ -417,8 +415,13 @@ class RammerheadProxy extends Proxy {
     /**
      * @private
      */
-    _setupLocalStorageServiceRoutes() {
+    _setupLocalStorageServiceRoutes(disableSync) {
         this.POST('/syncLocalStorage', async (req, res) => {
+            if (disableSync) {
+                res.writeHead(404);
+                res.end('server disabled localStorage sync');
+                return;
+            }
             const badRequest = (msg) => httpResponse.badRequest(this.logger, req, res, this.loggerGetIP(req), msg);
             const respondJson = (obj) => res.end(JSON.stringify(obj));
             const { sessionId, origin } = new URLPath(req.url).getParams();
@@ -530,16 +533,7 @@ class RammerheadProxy extends Proxy {
      */
     GET(route, handler) {
         if (route === '/hammerhead.js') {
-            // modify unmodifable items that cannot be hooked in rammerhead.js
-            handler.content = handler.content
-                .replace(
-                    'function parseProxyUrl$1',
-                    'window.overrideParseProxyUrl = function(func) {parseProxyUrl$$1 = func}; $&'
-                )
-                .replace(
-                    'function getProxyUrl$1',
-                    'window.overrideGetProxyUrl = function(func) {getProxyUrl$$1 = func}; $&'
-                );
+            handler.content = fs.readFileSync(path.join(__dirname, '../client/hammerhead.min.js'));
         }
         super.GET(route, handler);
     }
