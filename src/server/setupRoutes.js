@@ -46,6 +46,8 @@ module.exports = function setupRoutes(proxyServer, sessionStore, logger) {
                 httpProxy = httpProxy.slice(7);
             }
             session.setExternalProxySettings(httpProxy);
+        } else {
+            session.externalProxySettings = null;
         }
         if (enableShuffling === '1' && !session.shuffleDict) {
             session.shuffleDict = StrShuffler.generateDictionary();

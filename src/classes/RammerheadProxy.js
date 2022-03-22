@@ -398,9 +398,9 @@ class RammerheadProxy extends Proxy {
      * @private
      */
     _setupRammerheadServiceRoutes() {
-        this.GET('/rammerhead.min.js', {
+        this.GET('/rammerhead.js', {
             content: fs.readFileSync(
-                path.join(__dirname, '../client/rammerhead.min.js')
+                path.join(__dirname, '../client/rammerhead' + (process.env.DEVELOPMENT ? '.js' : '.min.js'))
             ),
             contentType: 'application/x-javascript'
         });
@@ -533,7 +533,7 @@ class RammerheadProxy extends Proxy {
      */
     GET(route, handler) {
         if (route === '/hammerhead.js') {
-            handler.content = fs.readFileSync(path.join(__dirname, '../client/hammerhead.min.js'));
+            handler.content = fs.readFileSync(path.join(__dirname, '../client/hammerhead' + (process.env.DEVELOPMENT ? '.js' : '.min.js')));
         }
         super.GET(route, handler);
     }

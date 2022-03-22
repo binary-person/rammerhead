@@ -1,3 +1,10 @@
+## v1.1.2
+
+- build to rammerhead.js and rammerhead.min.js
+- fix same-domain iframes
+- add jsdoc definitions for rammerhead store classes
+- fix http proxy setting not deleting correctly
+
 ## v1.1.1
 
 - fix uncatchable connection crash errors

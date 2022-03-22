@@ -10,11 +10,25 @@
         hookHammerheadStartOnce(main);
         // before task.js, we need to add url shuffling
         addUrlShuffling();
+        // and fix iframed proxies
+        fixProxyEmbed();
     }
 
     function main() {
         fixUrlRewrite();
         fixElementGetter();
+
+        // other code if they want to also hook onto hammerhead start //
+        if (window.rammerheadStartListeners) {
+            for (const eachListener of window.rammerheadStartListeners) {
+                try {
+                    eachListener();
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+            delete window.rammerheadStartListeners;
+        }
 
         // sync localStorage code //
         // disable if other code wants to implement their own localStorage site wrapper
@@ -343,6 +357,16 @@
                 Object.defineProperty(window[ElementClass].prototype, attr, desc);
             }
         }
+    }
+    function fixProxyEmbed() {
+        const originalGet = window['%hammerhead%'].utils.dom.isCrossDomainWindows;
+        window.overrideIsCrossDomainWindows(function(win1, win2) {
+            let isCrossDomain = originalGet(win1, win2);
+            if (!isCrossDomain && ((win1 && !!win1['%hammerhead%']) === (win2 && !!win2['%hammerhead%'])))   {
+                return false;
+            }
+            return true;
+        });
     }
 
     function hookHammerheadStartOnce(callback) {

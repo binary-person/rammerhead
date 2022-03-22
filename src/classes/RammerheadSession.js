@@ -22,8 +22,9 @@ class RammerheadSession extends Session {
      * @param {string} options.id
      * @param {boolean} options.dontConnectToData - used when we want to connect to data later (or simply don't want to)
      * @param {boolean} options.disableShuffling
+     * @param {string[]} options.prependScripts
      */
-    constructor({ id = generateId(), dontConnectToData = false, disableShuffling = false } = {}) {
+    constructor({ id = generateId(), dontConnectToData = false, disableShuffling = false, prependScripts = [] } = {}) {
         super(['blah/blah'], {
             allowMultipleWindows: true,
             disablePageCaching: false
@@ -41,12 +42,18 @@ class RammerheadSession extends Session {
         //     console.error(err);
         // };
 
+        // intellisense //
+        /**
+         * @type {{ host: string, hostname: string, bypassRules?: string[]; port?: string; proxyAuth?: string, authHeader?: string } | null}
+         */
+        this.externalProxySettings = null;
+
         // disable http2. error handling from http2 proxy client to non-http2 user is too complicated to handle
         // (status code 0, for example, will crash rammerhead)
         this.isHttp2Disabled = () => true;
 
-        // support localStorage //
-        this.injectable.scripts.push('/rammerhead.min.js');
+        this.injectable.scripts.push(...prependScripts);
+        this.injectable.scripts.push('/rammerhead.js');
 
         this.id = id;
         this.shuffleDict = disableShuffling ? null : StrShuffler.generateDictionary();
@@ -85,10 +92,6 @@ class RammerheadSession extends Session {
 
         const session = new RammerheadSession({ id, dontConnectToData: true });
         session.data = parsed.data;
-        if (!('shuffleDict' in session.data)) {
-            // here only for updating old versioned sessions
-            session.data.shuffleDict = null;
-        }
         session.connectHammerheadToData(true);
         session.cookies.setJar(parsed.serializedCookieJar);
         return session;

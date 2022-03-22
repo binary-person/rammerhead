@@ -22,14 +22,26 @@ class RammerheadSessionMemoryStore extends RammerheadSessionAbstractStore {
         setInterval(() => this._cleanupRun(staleTimeout, maxToLive), cleanupInterval).unref();
     }
 
+    /**
+     * @returns {string[]} - list of session ids in store
+     */
     keys() {
         return Array.from(this.mapStore.keys());
     }
+    /**
+     * @param {string} id
+     * @returns {boolean}
+     */
     has(id) {
         const exists = this.mapStore.has(id);
         this.logger.debug(`(MemoryStore.has) ${id} ${exists}`);
         return exists;
     }
+    /**
+     * @param {string} id
+     * @param {boolean} updateActiveTimestamp
+     * @returns {RammerheadSession|undefined}
+     */
     get(id, updateActiveTimestamp = true) {
         if (!this.has(id)) return;
         this.logger.debug(`(MemoryStore.get) ${id} ${updateActiveTimestamp}`);
@@ -39,6 +51,10 @@ class RammerheadSessionMemoryStore extends RammerheadSessionAbstractStore {
 
         return session;
     }
+    /**
+     * @param {string} id
+     * @returns {RammerheadSession}
+     */
     add(id) {
         if (this.has(id)) throw new Error('the following session already exists: ' + id);
         this.logger.debug(`(MemoryStore.add) ${id}`);
@@ -46,15 +62,23 @@ class RammerheadSessionMemoryStore extends RammerheadSessionAbstractStore {
         this.mapStore.set(id, session);
         return session;
     }
+    /**
+     * @param {string} id
+     * @returns {boolean} - returns true when a delete operation is performed
+     */
+    delete(id) {
+        return this.mapStore.delete(id);
+    }
+    /**
+     * @param {string} id
+     * @param {string} serializedSession
+     */
     addSerializedSession(id, serializedSession) {
         this.logger.debug(`(MemoryStore.addSerializedSession) adding serialized session id ${id} to store`);
         const session = RammerheadSession.DeserializeSession(id, serializedSession);
         session.updateLastUsed();
         this.mapStore.set(id, session);
         this.logger.debug(`(FileCache.addSerializedSession) added ${id}`);
-    }
-    delete(id) {
-        return this.mapStore.delete(id);
     }
 
     /**

@@ -52,6 +52,7 @@ class RammerheadSessionAbstractStore {
     /**
      * @abstract
      * @param {string} id
+     * @returns {boolean}
      */
     has(id) {
         this._mustImplement();

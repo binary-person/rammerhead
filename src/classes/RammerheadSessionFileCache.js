@@ -61,6 +61,9 @@ class RammerheadSessionFileCache extends RammerheadSessionAbstractStore {
             .filter((file) => file.endsWith(sessionFileExtension))
             .map((file) => file.slice(0, -sessionFileExtension.length));
     }
+    /**
+     * @returns {string[]} - list of session ids in store
+     */
     keys() {
         let arr = this.keysStore();
         for (const id of this.cachedSessions.keys()) {
@@ -68,9 +71,18 @@ class RammerheadSessionFileCache extends RammerheadSessionAbstractStore {
         }
         return arr;
     }
+    /**
+     * @param {string} id
+     * @returns {boolean}
+     */
     has(id) {
         return this.cachedSessions.has(id) || fs.existsSync(this._getSessionFilePath(id));
     }
+    /**
+     * @param {string} id
+     * @param {boolean} updateActiveTimestamp
+     * @returns {RammerheadSession|undefined}
+     */
     get(id, updateActiveTimestamp = true, cacheToMemory = true) {
         if (!this.has(id)) {
             this.logger.debug(`(FileCache.get) ${id} does not exist`);
@@ -97,6 +109,10 @@ class RammerheadSessionFileCache extends RammerheadSessionAbstractStore {
 
         return session;
     }
+    /**
+     * @param {string} id
+     * @returns {RammerheadSession}
+     */
     add(id) {
         if (this.has(id)) throw new Error(`session ${id} already exists`);
 
@@ -106,6 +122,10 @@ class RammerheadSessionFileCache extends RammerheadSessionAbstractStore {
 
         return this.get(id);
     }
+    /**
+     * @param {string} id
+     * @returns {boolean} - returns true when a delete operation is performed
+     */
     delete(id) {
         this.logger.debug(`(FileCache.delete) deleting ${id}`);
         if (this.has(id)) {
@@ -117,6 +137,10 @@ class RammerheadSessionFileCache extends RammerheadSessionAbstractStore {
         this.logger.debug(`(FileCache.delete) ${id} does not exist`);
         return false;
     }
+    /**
+     * @param {string} id
+     * @param {string} serializedSession
+     */
     addSerializedSession(id, serializedSession) {
         this.logger.debug(`(FileCache.addSerializedSession) adding serialized session id ${id} to store`);
         const session = RammerheadSession.DeserializeSession(id, serializedSession);
