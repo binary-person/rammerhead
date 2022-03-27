@@ -1,3 +1,8 @@
+## v1.1.31
+
+- add argument for ignoring files in `addStaticFilesToProxy`
+- fix parseProxyUrl().proxy.port for 443 and 80 urls
+
 ## v1.1.3
 
 - add option to restrict IP to session

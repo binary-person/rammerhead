@@ -298,13 +298,22 @@
         delete window.overrideParseProxyUrl;
     }
     function fixUrlRewrite() {
-        const port = location.port || (location.protocol === 'https:' ? 443 : 80);
+        const port = location.port || (location.protocol === 'https:' ? '443' : '80');
         const getProxyUrl = window['%hammerhead%'].utils.url.getProxyUrl;
         window['%hammerhead%'].utils.url.overrideGetProxyUrl(function (url, opts = {}) {
             if (!opts.proxyPort) {
                 opts.proxyPort = port;
             }
             return getProxyUrl(url, opts);
+        });
+        const parseProxyUrl$1 = window['%hammerhead%'].sharedUtils.url.parseProxyUrl;
+        window.overrideParseProxyUrl(function (url) {
+            const parsed = parseProxyUrl$1(url);
+            if (!parsed || !parsed.proxy) return parsed;
+            if (!parsed.proxy.port) {
+                parsed.proxy.port = port;
+            }
+            return parsed;
         });
     }
     function fixElementGetter() {
