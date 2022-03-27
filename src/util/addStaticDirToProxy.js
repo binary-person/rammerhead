@@ -22,7 +22,7 @@ const isDirectory = (dir) => fs.lstatSync(dir).isDirectory();
  * publicly. /index.html will automatically link to /
  * @param {string} rootPath - all the files that will be served under rootPath
  */
-function addStaticFilesToProxy(proxy, staticDir, rootPath = '/') {
+function addStaticFilesToProxy(proxy, staticDir, rootPath = '/', shouldIgnoreFile = (_file, _dir) => false) {
     if (!isDirectory(staticDir)) {
         throw new TypeError('specified folder path is not a directory');
     }
@@ -34,7 +34,11 @@ function addStaticFilesToProxy(proxy, staticDir, rootPath = '/') {
 
     files.map((file) => {
         if (isDirectory(path.join(staticDir, file))) {
-            addStaticFilesToProxy(proxy, path.join(staticDir, file), rootPath + file + '/');
+            addStaticFilesToProxy(proxy, path.join(staticDir, file), rootPath + file + '/', shouldIgnoreFile);
+            return;
+        }
+
+        if (shouldIgnoreFile(file, staticDir)) {
             return;
         }
 
