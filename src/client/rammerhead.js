@@ -19,6 +19,10 @@
         fixElementGetter();
         fixCrossWindowLocalStorage();
 
+        delete window.overrideGetProxyUrl;
+        delete window.overrideParseProxyUrl;
+        delete window.overrideIsCrossDomainWindows;
+
         // other code if they want to also hook onto hammerhead start //
         if (window.rammerheadStartListeners) {
             for (const eachListener of window.rammerheadStartListeners) {
@@ -292,11 +296,9 @@
             }
             return replaceUrl(getProxyUrl$1(url, opts), (u) => shuffler.shuffle(u), true);
         });
-        delete window.overrideGetProxyUrl;
         window.overrideParseProxyUrl(function (url) {
             return parseProxyUrl$1(replaceUrl(url, (u) => shuffler.unshuffle(u), false));
         });
-        delete window.overrideParseProxyUrl;
     }
     function fixUrlRewrite() {
         const port = location.port || (location.protocol === 'https:' ? '443' : '80');

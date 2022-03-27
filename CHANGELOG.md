@@ -1,3 +1,7 @@
+## v1.1.33
+
+- delete hooks only after all fix function calls
+
 ## v1.1.32
 
 - fix localStorage communication between windows by forcing them to read/write from realLocalStorage on every (get/set)Item call 
