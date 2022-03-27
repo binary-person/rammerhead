@@ -1,0 +1,7 @@
+{
+    "name": "Rammerhead",
+    "description": "User friendly web proxy powered by testcafe-hammerhead.",
+    "repository": "https://github.com/binary-person/rammerhead",
+    "logo": "https://raw.githubusercontent.com/binary-person/rammerhead/master/public/logo.png",
+    "keywords": ["rammerhead", "proxy", "web proxy", "unblocker"]
+}
