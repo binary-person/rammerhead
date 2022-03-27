@@ -1,6 +1,6 @@
 # rammerhead
 
-> proxy based on testcafe-hammerhead
+> proxy based on testcafe-hammerhead (password is `sharkie4life`)
 
 Demo link: https://demo-opensource.rammerhead.org
 
@@ -25,7 +25,7 @@ The proxy allows users to create a "session". When they access their session, th
 
 ## Installing and running
 
-Assuming you have node already installed, clone the repo, then run `npm install`.
+Assuming you have node already installed, clone the repo, then run `npm install`, then run `npm run build`.
 
 After, configure your settings in [src/config.js](src/config.js). If you wish to consistently pull updates from this repo without the hassle of merging, create `config.js` in the root folder so they override the configs in `src/`.
 
