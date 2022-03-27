@@ -1,6 +1,6 @@
 # rammerhead
 
-> proxy based on testcafe-hammerhead (password is `sharkie4life`)
+> proxy based on testcafe-hammerhead (default password is `sharkie4life`, this can be edited in [src/config.js](src/config.js), `null` is disabled)
 
 Demo link: https://demo-opensource.rammerhead.org
 
