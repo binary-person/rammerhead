@@ -1,3 +1,9 @@
+## v1.1.21
+
+- fix rewriting only non-websocket server headers
+- fix errors when calling focus()/click()... to a closed iframe
+- don't strip headers (hook onto res.writeHead) if connection is a websocket
+
 ## v1.1.2
 
 - build to rammerhead.js and rammerhead.min.js

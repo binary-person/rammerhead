@@ -282,67 +282,70 @@ class RammerheadProxy extends Proxy {
     async _onRequest(req, res, serverInfo) {
         serverInfo = this._rewriteServerInfo(req);
 
-        // strip server headers
-        const originalWriteHead = res.writeHead;
-        const self = this;
-        res.writeHead = function (statusCode, statusMessage, headers) {
-            if (!headers) {
-                headers = statusMessage;
-                statusMessage = undefined;
-            }
+        const isWebsocket = res instanceof stream.Duplex;
 
-            if (headers) {
-                const alreadyRewrittenHeaders = [];
-                if (Array.isArray(headers)) {
-                    // [content-type, text/html, headerKey, headerValue, ...]
-                    for (let i = 0; i < headers.length - 1; i += 2) {
-                        const header = headers[i].toLowerCase();
-                        if (header in self.rewriteServerHeaders) {
-                            alreadyRewrittenHeaders.push(header);
-                            headers[i + 1] =
-                                self.rewriteServerHeaders[header] && self.rewriteServerHeaders[header](headers[i + 1]);
-                            if (!headers[i + 1]) {
-                                headers.splice(i, 2);
-                                i -= 2;
+        if (!isWebsocket) {
+            // strip server headers
+            const originalWriteHead = res.writeHead;
+            const self = this;
+            res.writeHead = function (statusCode, statusMessage, headers) {
+                if (!headers) {
+                    headers = statusMessage;
+                    statusMessage = undefined;
+                }
+    
+                if (headers) {
+                    const alreadyRewrittenHeaders = [];
+                    if (Array.isArray(headers)) {
+                        // [content-type, text/html, headerKey, headerValue, ...]
+                        for (let i = 0; i < headers.length - 1; i += 2) {
+                            const header = headers[i].toLowerCase();
+                            if (header in self.rewriteServerHeaders) {
+                                alreadyRewrittenHeaders.push(header);
+                                headers[i + 1] =
+                                    self.rewriteServerHeaders[header] && self.rewriteServerHeaders[header](headers[i + 1]);
+                                if (!headers[i + 1]) {
+                                    headers.splice(i, 2);
+                                    i -= 2;
+                                }
                             }
                         }
-                    }
-                    for (const header in self.rewriteServerHeaders) {
-                        if (alreadyRewrittenHeaders.includes(header)) continue;
-                        // if user wants to add headers, they can do that here
-                        const value = self.rewriteServerHeaders[header] && self.rewriteServerHeaders[header]();
-                        if (value) {
-                            headers.push(header, value);
-                        }
-                    }
-                } else {
-                    for (const header in headers) {
-                        if (header in self.rewriteServerHeaders) {
-                            alreadyRewrittenHeaders.push(header);
-                            headers[header] = self.rewriteServerHeaders[header] && self.rewriteServerHeaders[header]();
-                            if (!headers[header]) {
-                                delete headers[header];
+                        for (const header in self.rewriteServerHeaders) {
+                            if (alreadyRewrittenHeaders.includes(header)) continue;
+                            // if user wants to add headers, they can do that here
+                            const value = self.rewriteServerHeaders[header] && self.rewriteServerHeaders[header]();
+                            if (value) {
+                                headers.push(header, value);
                             }
                         }
-                    }
-                    for (const header in self.rewriteServerHeaders) {
-                        if (alreadyRewrittenHeaders.includes(header)) continue;
-                        const value = self.rewriteServerHeaders[header] && self.rewriteServerHeaders[header]();
-                        if (value) {
-                            headers[header] = value;
+                    } else {
+                        for (const header in headers) {
+                            if (header in self.rewriteServerHeaders) {
+                                alreadyRewrittenHeaders.push(header);
+                                headers[header] = self.rewriteServerHeaders[header] && self.rewriteServerHeaders[header]();
+                                if (!headers[header]) {
+                                    delete headers[header];
+                                }
+                            }
+                        }
+                        for (const header in self.rewriteServerHeaders) {
+                            if (alreadyRewrittenHeaders.includes(header)) continue;
+                            const value = self.rewriteServerHeaders[header] && self.rewriteServerHeaders[header]();
+                            if (value) {
+                                headers[header] = value;
+                            }
                         }
                     }
                 }
-            }
+    
+                if (statusMessage) {
+                    originalWriteHead.call(this, statusCode, statusMessage, headers);
+                } else {
+                    originalWriteHead.call(this, statusCode, headers);
+                }
+            };
+        }
 
-            if (statusMessage) {
-                originalWriteHead.call(this, statusCode, statusMessage, headers);
-            } else {
-                originalWriteHead.call(this, statusCode, headers);
-            }
-        };
-
-        const isWebsocket = res instanceof stream.Duplex;
         const isRoute = this.checkIsRoute(req);
         const ip = this.loggerGetIP(req);
 

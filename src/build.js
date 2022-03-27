@@ -13,7 +13,20 @@ fs.writeFileSync(
             'function parseProxyUrl$1',
             'window.overrideParseProxyUrl = function(func) {parseProxyUrl$$1 = func}; $&'
         )
+        // fix iframing proxy issue
+        .replace(/window === window\.top/g, '((window.parent === window.top && !window.top["%hammerhead%"]) || window === window.top)')
         .replace('isCrossDomainParent = parentLocationWrapper === parentWindow.location', 'isCrossDomainParent = parentLocationWrapper === parentWindow.location || !parentWindow["%hammerhead%"]')
+
+        // prevent calls to elements on a closed iframe
+        .replace('dispatchEvent: function () {', '$& if (!window) return null;')
+        .replace('click: function () {', '$& if (!window) return null;')
+        .replace('setSelectionRange: function () {', '$& if (!window) return null;')
+        .replace('select: function () {', '$& if (!window) return null;')
+        .replace('focus: function () {', '$& if (!window) return null;')
+        .replace('blur: function () {', '$& if (!window) return null;')
+        .replace('preventDefault: function () {', '$& if (!window) return null;')
+
+        // expose hooks for rammerhead.js
         .replace('function isCrossDomainWindows', 'window.overrideIsCrossDomainWindows = function(func) {isCrossDomainWindows = func}; $&')
         .replace('function getProxyUrl$1', 'window.overrideGetProxyUrl = function(func) {getProxyUrl$$1 = func}; $&')
         .replace('return window.location.search;', 'return (new URL(get$$2())).search;')
