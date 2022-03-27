@@ -2,7 +2,7 @@
 
 > proxy based on testcafe-hammerhead
 
-Demo link: https://direct2.rammerhead.org
+Demo link: https://demo-opensource.rammerhead.org
 
 
 ## Supporting me and contributing
@@ -29,10 +29,7 @@ Assuming you have node already installed, clone the repo, then run `npm install`
 
 After, configure your settings in [src/config.js](src/config.js). If you wish to consistently pull updates from this repo without the hassle of merging, create `config.js` in the root folder so they override the configs in `src/`.
 
-Finally, there are two options in starting rammerhead:
-
-- `node src/server.js`
-  - this starts the server as normal
+Finally run the following to start rammerhead: `node src/server.js`
 
 ## Discord server
 

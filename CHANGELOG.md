@@ -1,3 +1,7 @@
+## v1.1.3
+
+- add option to restrict IP to session
+
 ## v1.1.21
 
 - fix rewriting only non-websocket server headers

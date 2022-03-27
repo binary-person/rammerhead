@@ -3,6 +3,7 @@ const URLPath = require('../util/URLPath');
 const httpResponse = require('../util/httpResponse');
 const config = require('../config');
 const StrShuffler = require('../util/StrShuffler');
+const RammerheadSession = require('../classes/RammerheadSession');
 
 /**
  *
@@ -20,14 +21,18 @@ module.exports = function setupRoutes(proxyServer, sessionStore, logger) {
         }
         return false;
     };
-    proxyServer.GET('/needpassword', (_req, res) => {
+    proxyServer.GET('/needpassword', (req, res) => {
         res.end(config.password ? 'true' : 'false');
     });
     proxyServer.GET('/newsession', (req, res) => {
         if (isNotAuthorized(req, res)) return;
 
         const id = generateId();
-        sessionStore.add(id);
+        const session = new RammerheadSession();
+        session.data.restrictIP = config.getIP(req);
+
+        // workaround for saving the modified session to disk
+        sessionStore.addSerializedSession(id, session.serializeSession());
         res.end(id);
     });
     proxyServer.GET('/editsession', (req, res) => {

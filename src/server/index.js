@@ -30,7 +30,7 @@ if (config.publicDir) addStaticDirToProxy(proxyServer, config.publicDir);
 const sessionStore = new RammerheadSessionFileCache({ logger, ...config.fileCacheSessionConfig });
 sessionStore.attachToProxy(proxyServer);
 
-setupPipeline(proxyServer);
+setupPipeline(proxyServer, sessionStore);
 setupRoutes(proxyServer, sessionStore, logger);
 
 // nicely close proxy server and save sessions to store before we exit
