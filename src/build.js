@@ -9,10 +9,6 @@ fs.writeFileSync(
     path.join(__dirname, './client/hammerhead.js'),
     fs
         .readFileSync(path.join(__dirname, '../node_modules/testcafe-hammerhead/lib/client/hammerhead.js'), 'utf8')
-        .replace(
-            'function parseProxyUrl$1',
-            'window.overrideParseProxyUrl = function(func) {parseProxyUrl$$1 = func}; $&'
-        )
         // fix iframing proxy issue
         .replace(
             /window === window\.top/g,
@@ -21,6 +17,12 @@ fs.writeFileSync(
         .replace(
             'isCrossDomainParent = parentLocationWrapper === parentWindow.location',
             'isCrossDomainParent = parentLocationWrapper === parentWindow.location || !parentWindow["%hammerhead%"]'
+        )
+
+        // only allow saving to real localStorage by rammerhead.js's fix up code
+        .replace(
+            'saveToNativeStorage = function () {',
+            'saveToNativeStorage = function (callFromRammerhead) { if (!callFromRammerhead) return;'
         )
 
         // prevent calls to elements on a closed iframe
@@ -36,6 +38,10 @@ fs.writeFileSync(
         .replace(
             'function isCrossDomainWindows',
             'window.overrideIsCrossDomainWindows = function(func) {isCrossDomainWindows = func}; $&'
+        )
+        .replace(
+            'function parseProxyUrl$1',
+            'window.overrideParseProxyUrl = function(func) {parseProxyUrl$$1 = func}; $&'
         )
         .replace('function getProxyUrl$1', 'window.overrideGetProxyUrl = function(func) {getProxyUrl$$1 = func}; $&')
         .replace('return window.location.search;', 'return (new URL(get$$2())).search;')

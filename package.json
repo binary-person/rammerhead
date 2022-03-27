@@ -1,6 +1,6 @@
 {
   "name": "rammerhead",
-  "version": "1.1.31",
+  "version": "1.1.32",
   "description": "User friendly web proxy powered by testcafe-hammerhead",
   "main": "src/index.js",
   "scripts": {

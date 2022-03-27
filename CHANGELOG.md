@@ -1,3 +1,7 @@
+## v1.1.32
+
+- fix localStorage communication between windows by forcing them to read/write from realLocalStorage on every (get/set)Item call 
+
 ## v1.1.31
 
 - add argument for ignoring files in `addStaticFilesToProxy`

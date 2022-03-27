@@ -3,7 +3,7 @@
     if (!hammerhead) throw new Error('hammerhead not loaded yet');
     if (hammerhead.settings._settings.sessionId) {
         // task.js already loaded. this will likely never happen though since this file loads before task.js
-        console.warn('unexpected task.js to laod before rammerhead.js. url shuffling cannot be used');
+        console.warn('unexpected task.js to load before rammerhead.js. url shuffling cannot be used');
         main();
     } else {
         // wait for task.js to load
@@ -17,6 +17,7 @@
     function main() {
         fixUrlRewrite();
         fixElementGetter();
+        fixCrossWindowLocalStorage();
 
         // other code if they want to also hook onto hammerhead start //
         if (window.rammerheadStartListeners) {
@@ -376,6 +377,40 @@
             }
             return true;
         });
+    }
+    function fixCrossWindowLocalStorage() {
+        const hookFunction = (obj, prop, beforeCall, afterCall) => {
+            obj[prop] = new window['%hammerhead%'].nativeMethods.Proxy(obj[prop], {
+                apply(target, thisArg, args) {
+                    if (beforeCall) beforeCall();
+                    const returnVal = Reflect.apply(target, thisArg, args);
+                    if (afterCall) afterCall();
+                    return returnVal;
+                }
+            });
+        };
+        const hookRestore = (storageProp) => {
+            const desc = Object.getOwnPropertyDescriptor(window, storageProp);
+            const storageProxy = desc.get();
+            const rewrittenProxy = new window['%hammerhead%'].nativeMethods.Proxy(storageProxy, {
+                get(target, prop, receiver) {
+                    target.restore();
+                    return Reflect.get(target, prop, receiver);
+                }
+            });
+            desc.get = () => rewrittenProxy;
+            Object.defineProperty(window, storageProp, desc);
+        };
+        hookFunction(Storage.prototype, 'getItem', () => {
+            window['%hammerhead%'].storages.localStorageProxy.restore();
+            window['%hammerhead%'].storages.sessionStorageProxy.restore();
+        });
+        hookFunction(Storage.prototype, 'setItem', undefined, () => {
+            window['%hammerhead%'].storages.localStorageProxy.saveToNativeStorage(true);
+            window['%hammerhead%'].storages.sessionStorageProxy.saveToNativeStorage(true);
+        });
+        hookRestore('localStorage');
+        hookRestore('sessionStorage');
     }
 
     function hookHammerheadStartOnce(callback) {
