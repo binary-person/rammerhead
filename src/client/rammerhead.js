@@ -360,9 +360,9 @@
     }
     function fixProxyEmbed() {
         const originalGet = window['%hammerhead%'].utils.dom.isCrossDomainWindows;
-        window.overrideIsCrossDomainWindows(function(win1, win2) {
+        window.overrideIsCrossDomainWindows(function (win1, win2) {
             let isCrossDomain = originalGet(win1, win2);
-            if (!isCrossDomain && ((win1 && !!win1['%hammerhead%']) === (win2 && !!win2['%hammerhead%'])))   {
+            if (!isCrossDomain && (win1 && !!win1['%hammerhead%']) === (win2 && !!win2['%hammerhead%'])) {
                 return false;
             }
             return true;

@@ -19,9 +19,14 @@ hGuard.isConnectionResetError = function (err) {
     return true;
 };
 
-process.on('uncaughtException', err => {
+process.on('uncaughtException', (err) => {
     // for some reason, the above never catches all of the errors. this is a last resort failsafe
-    if (err.message.includes('ECONN') || err.message.includes('EPIPE') || err.message.includes('ETIMEDOUT') || err.message.includes('ERR_INVALID_')) {
+    if (
+        err.message.includes('ECONN') ||
+        err.message.includes('EPIPE') ||
+        err.message.includes('ETIMEDOUT') ||
+        err.message.includes('ERR_INVALID_')
+    ) {
         // crash avoided!
         console.error('Avoided crash:' + err.message);
     } else {

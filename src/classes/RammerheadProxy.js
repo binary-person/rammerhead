@@ -87,7 +87,7 @@ class RammerheadProxy extends Proxy {
             // a downside to using only one proxy server is that crossdomain requests
             // will not be simulated correctly
             proxyHttpOrHttps.createServer = function (...args) {
-                const emptyFunc = () => { };
+                const emptyFunc = () => {};
                 if (onlyOneHttpServer) {
                     // createServer for server1 already called. now we return a mock http server for server2
                     return { on: emptyFunc, listen: emptyFunc, close: emptyFunc };
@@ -293,7 +293,7 @@ class RammerheadProxy extends Proxy {
                     headers = statusMessage;
                     statusMessage = undefined;
                 }
-    
+
                 if (headers) {
                     const alreadyRewrittenHeaders = [];
                     if (Array.isArray(headers)) {
@@ -303,7 +303,8 @@ class RammerheadProxy extends Proxy {
                             if (header in self.rewriteServerHeaders) {
                                 alreadyRewrittenHeaders.push(header);
                                 headers[i + 1] =
-                                    self.rewriteServerHeaders[header] && self.rewriteServerHeaders[header](headers[i + 1]);
+                                    self.rewriteServerHeaders[header] &&
+                                    self.rewriteServerHeaders[header](headers[i + 1]);
                                 if (!headers[i + 1]) {
                                     headers.splice(i, 2);
                                     i -= 2;
@@ -322,7 +323,8 @@ class RammerheadProxy extends Proxy {
                         for (const header in headers) {
                             if (header in self.rewriteServerHeaders) {
                                 alreadyRewrittenHeaders.push(header);
-                                headers[header] = self.rewriteServerHeaders[header] && self.rewriteServerHeaders[header]();
+                                headers[header] =
+                                    self.rewriteServerHeaders[header] && self.rewriteServerHeaders[header]();
                                 if (!headers[header]) {
                                     delete headers[header];
                                 }
@@ -337,7 +339,7 @@ class RammerheadProxy extends Proxy {
                         }
                     }
                 }
-    
+
                 if (statusMessage) {
                     originalWriteHead.call(this, statusCode, statusMessage, headers);
                 } else {
@@ -536,7 +538,9 @@ class RammerheadProxy extends Proxy {
      */
     GET(route, handler) {
         if (route === '/hammerhead.js') {
-            handler.content = fs.readFileSync(path.join(__dirname, '../client/hammerhead' + (process.env.DEVELOPMENT ? '.js' : '.min.js')));
+            handler.content = fs.readFileSync(
+                path.join(__dirname, '../client/hammerhead' + (process.env.DEVELOPMENT ? '.js' : '.min.js'))
+            );
         }
         super.GET(route, handler);
     }
