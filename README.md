@@ -24,6 +24,8 @@ This proxy supports proxying
 The proxy allows users to create a "session". When they access their session, their localStorage and cookies will be synced with rammerhead. This allows for accurately mocking cookied requests and conveniently save their logins even if they switch devices. This also enables users to configure a custom HTTP proxy server for rammerhead to connect to for the session.
 
 ## Installing and running
+Quick run on Replit:
+[![Run on Repl.it](https://repl.it/badge/github/binary-person/rammerhead)](https://repl.it/github/binary-person/rammerhead)
 
 Rammerhead requires you to have at least **node v16** to be installed. After that is installed, clone the repo, then run `npm install` and `npm run build`.
 
