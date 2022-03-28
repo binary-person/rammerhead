@@ -37,13 +37,16 @@ fs.writeFileSync(
         // expose hooks for rammerhead.js
         .replace(
             'function isCrossDomainWindows',
-            'window.overrideIsCrossDomainWindows = function(func) {isCrossDomainWindows = func}; $&'
+            'window.overrideIsCrossDomainWindows = function(rewrite) {isCrossDomainWindows = rewrite(isCrossDomainWindows)}; $&'
         )
         .replace(
             'function parseProxyUrl$1',
-            'window.overrideParseProxyUrl = function(func) {parseProxyUrl$$1 = func}; $&'
+            'window.overrideParseProxyUrl = function(rewrite) {parseProxyUrl$$1 = rewrite(parseProxyUrl$$1)}; $&'
         )
-        .replace('function getProxyUrl$1', 'window.overrideGetProxyUrl = function(func) {getProxyUrl$$1 = func}; $&')
+        .replace(
+            'function getProxyUrl$1',
+            'window.overrideGetProxyUrl = function(rewrite) {getProxyUrl$$1 = rewrite(getProxyUrl$$1)}; $&'
+        )
         .replace('return window.location.search;', 'return (new URL(get$$2())).search;')
         .replace('return window.location.hash;', 'return (new URL(get$$2())).hash;')
         .replace(

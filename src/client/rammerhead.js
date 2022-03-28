@@ -287,18 +287,22 @@
         window['%hammerhead%'].utils.url.overrideParseProxyUrl(function (url) {
             return parseProxyUrl(replaceUrl(url, (u) => shuffler.unshuffle(u), false));
         });
-        // //
-        const getProxyUrl$1 = window['%hammerhead%'].sharedUtils.url.getProxyUrl;
-        const parseProxyUrl$1 = window['%hammerhead%'].sharedUtils.url.parseProxyUrl;
-        window.overrideGetProxyUrl(function (url, opts) {
-            if (noShuffling) {
-                return getProxyUrl$1(url, opts);
-            }
-            return replaceUrl(getProxyUrl$1(url, opts), (u) => shuffler.shuffle(u), true);
-        });
-        window.overrideParseProxyUrl(function (url) {
-            return parseProxyUrl$1(replaceUrl(url, (u) => shuffler.unshuffle(u), false));
-        });
+        // manual hooks //
+        window.overrideGetProxyUrl(
+            (getProxyUrl$1) =>
+                function (url, opts) {
+                    if (noShuffling) {
+                        return getProxyUrl$1(url, opts);
+                    }
+                    return replaceUrl(getProxyUrl$1(url, opts), (u) => shuffler.shuffle(u), true);
+                }
+        );
+        window.overrideParseProxyUrl(
+            (parseProxyUrl$1) =>
+                function (url) {
+                    return parseProxyUrl$1(replaceUrl(url, (u) => shuffler.unshuffle(u), false));
+                }
+        );
     }
     function fixUrlRewrite() {
         const port = location.port || (location.protocol === 'https:' ? '443' : '80');
@@ -309,15 +313,17 @@
             }
             return getProxyUrl(url, opts);
         });
-        const parseProxyUrl$1 = window['%hammerhead%'].sharedUtils.url.parseProxyUrl;
-        window.overrideParseProxyUrl(function (url) {
-            const parsed = parseProxyUrl$1(url);
-            if (!parsed || !parsed.proxy) return parsed;
-            if (!parsed.proxy.port) {
-                parsed.proxy.port = port;
-            }
-            return parsed;
-        });
+        window.overrideParseProxyUrl(
+            (parseProxyUrl$1) =>
+                function (url) {
+                    const parsed = parseProxyUrl$1(url);
+                    if (!parsed || !parsed.proxy) return parsed;
+                    if (!parsed.proxy.port) {
+                        parsed.proxy.port = port;
+                    }
+                    return parsed;
+                }
+        );
     }
     function fixElementGetter() {
         const fixList = {
@@ -371,14 +377,16 @@
         }
     }
     function fixProxyEmbed() {
-        const originalGet = window['%hammerhead%'].utils.dom.isCrossDomainWindows;
-        window.overrideIsCrossDomainWindows(function (win1, win2) {
-            let isCrossDomain = originalGet(win1, win2);
-            if (!isCrossDomain && (win1 && !!win1['%hammerhead%']) === (win2 && !!win2['%hammerhead%'])) {
-                return false;
-            }
-            return true;
-        });
+        window.overrideIsCrossDomainWindows(
+            (isCrossDomainWindows) =>
+                function (win1, win2) {
+                    let isCrossDomain = isCrossDomainWindows(win1, win2);
+                    if (!isCrossDomain && (win1 && !!win1['%hammerhead%']) === (win2 && !!win2['%hammerhead%'])) {
+                        return false;
+                    }
+                    return true;
+                }
+        );
     }
     function fixCrossWindowLocalStorage() {
         const hookFunction = (obj, prop, beforeCall, afterCall) => {

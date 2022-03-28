@@ -1,3 +1,7 @@
+## v1.1.34
+
+- convert hooks to stackable rewrite system
+
 ## v1.1.33
 
 - delete hooks only after all fix function calls
