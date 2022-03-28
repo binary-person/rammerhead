@@ -1,0 +1,2 @@
+language = "nodejs"
+run = "npm install && npm install node@16 && npm run build &&npm start"
