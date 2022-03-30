@@ -1,6 +1,5 @@
 const config = require('../config');
-
-const getSessionId = (reqPath) => ((reqPath || '').match(/^(?:[a-z0-9]+:\/\/[^/]+)?\/([a-z0-9]+)/i) || [])[1];
+const getSessionId = require('../util/getSessionId');
 
 /**
  * @param {import('../classes/RammerheadProxy')} proxyServer

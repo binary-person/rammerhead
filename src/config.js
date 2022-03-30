@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 
 module.exports = {
     //// HOSTING CONFIGURATION ////
@@ -8,6 +9,9 @@ module.exports = {
     port: 8080,
     crossDomainPort: 8081,
     publicDir: path.join(__dirname, '../public'), // set to null to disable
+
+    // if workers is null or 1, multithreading is disabled
+    workers: os.cpus().length,
 
     // ssl object is either null or { key: fs.readFileSync('path/to/key'), cert: fs.readFileSync('path/to/cert') }
     // for more info, see https://nodejs.org/api/https.html#https_https_createserver_options_requestlistener

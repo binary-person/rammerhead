@@ -1,7 +1,7 @@
 const RequestPipelineContext = require('testcafe-hammerhead/lib/request-pipeline/context');
 const StrShuffler = require('./StrShuffler');
+const getSessionId = require('./getSessionId');
 
-const getSessionId = (reqPath) => ((reqPath || '').match(/^(?:[a-z0-9]+:\/\/[^/]+)?\/([a-z0-9]+)/i) || [])[1];
 const replaceUrl = (url, replacer) => {
     //        regex:              https://google.com/    sessionid/   url
     return (url || '').replace(/^((?:[a-z0-9]+:\/\/[^/]+)?(?:\/[^/]+\/))([^]+)/i, function (_, g1, g2) {

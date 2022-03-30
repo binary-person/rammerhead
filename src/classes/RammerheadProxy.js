@@ -53,6 +53,7 @@ class RammerheadProxy extends Proxy {
      * @param {number} options.port - port for proxy to listen to
      * @param {number|null} options.crossDomainPort - crossDomain port to simulate cross origin requests. set to null
      * to disable using this. highly not recommended to disable this because it breaks sites that check for the origin header
+     * @param {boolean} options.dontListen - avoid calling http.listen() if you need to use sticky-session to load balance
      * @param {http.ServerOptions} options.ssl - set to null to disable ssl
      * @param {(req: http.IncomingMessage) => RammerheadServerInfo} options.getServerInfo - force hammerhead to rewrite using specified
      * server info (server info includes hostname, port, and protocol). Useful for a reverse proxy setup like nginx where you
@@ -65,6 +66,7 @@ class RammerheadProxy extends Proxy {
         bindingAddress = '127.0.0.1',
         port = 8080,
         crossDomainPort = 8081,
+        dontListen = false,
         ssl = null,
         getServerInfo = (req) => {
             const { hostname, port } = new URL('http://' + req.headers.host);
@@ -100,6 +102,8 @@ class RammerheadProxy extends Proxy {
             // hammerhead server.listen(anything)
             const originalListen = http.Server.prototype.listen;
             http.Server.prototype.listen = function (_proxyPort) {
+                if (dontListen)
+                    return;
                 originalListen.call(this, port, bindingAddress);
             };
 
@@ -119,6 +123,8 @@ class RammerheadProxy extends Proxy {
             // we still need to make sure the proxy binds to the correct address though
             const originalListen = http.Server.prototype.listen;
             http.Server.prototype.listen = function (portArg) {
+                if (dontListen)
+                    return;
                 originalListen.call(this, portArg, bindingAddress);
             };
             super('doesntmatter', port, crossDomainPort, {
