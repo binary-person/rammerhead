@@ -1,3 +1,7 @@
+## v1.2.01
+
+- avoid using unstable API `fs.cpSync` in build.js
+
 ## v1.2.0
 
 - added multithreading support

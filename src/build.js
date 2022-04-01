@@ -59,18 +59,13 @@ fs.writeFileSync(
         )
 );
 
-const copy = (oldPath, newPath) => fs.cpSync(path.join(__dirname, oldPath), path.join(__dirname, newPath));
-const minify = (fileName) => {
-    const filePath = path.join(__dirname, './client', fileName);
-    const minified = UglifyJS.minify(fs.readFileSync(filePath, 'utf8'));
+const minify = (fileName, newFileName) => {
+    const minified = UglifyJS.minify(fs.readFileSync(path.join(__dirname, './client', fileName), 'utf8'));
     if (minified.error) {
         throw minified.error;
     }
-    fs.writeFileSync(filePath, minified.code, 'utf8');
+    fs.writeFileSync(path.join(__dirname, './client', newFileName), minified.code, 'utf8');
 };
 
-copy('./client/rammerhead.js', './client/rammerhead.min.js');
-copy('./client/hammerhead.js', './client/hammerhead.min.js');
-
-minify('rammerhead.min.js');
-minify('hammerhead.min.js');
+minify('rammerhead.js', 'rammerhead.min.js');
+minify('hammerhead.js', 'hammerhead.min.js');
