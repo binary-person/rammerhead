@@ -1,4 +1,4 @@
-## v1.2.1
+## v1.2.11
 
 - fix huge spikes of memory usage by replacing localStorage system with a custom one
 - more fixes for iframing
