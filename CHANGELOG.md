@@ -1,3 +1,8 @@
+## v1.2.1
+
+- fix huge spikes of memory usage by replacing localStorage system with a custom one
+- more fixes for iframing
+
 ## v1.2.01
 
 - avoid using unstable API `fs.cpSync` in build.js

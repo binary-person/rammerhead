@@ -10,8 +10,6 @@
         hookHammerheadStartOnce(main);
         // before task.js, we need to add url shuffling
         addUrlShuffling();
-        // and fix iframed proxies
-        fixProxyEmbed();
     }
 
     function main() {
@@ -276,15 +274,15 @@
             history.replaceState(null, null, newUrl);
         }
 
-        const getProxyUrl = window['%hammerhead%'].utils.url.getProxyUrl;
-        const parseProxyUrl = window['%hammerhead%'].utils.url.parseProxyUrl;
-        window['%hammerhead%'].utils.url.overrideGetProxyUrl(function (url, opts) {
+        const getProxyUrl = hammerhead.utils.url.getProxyUrl;
+        const parseProxyUrl = hammerhead.utils.url.parseProxyUrl;
+        hammerhead.utils.url.overrideGetProxyUrl(function (url, opts) {
             if (noShuffling) {
                 return getProxyUrl(url, opts);
             }
             return replaceUrl(getProxyUrl(url, opts), (u) => shuffler.shuffle(u), true);
         });
-        window['%hammerhead%'].utils.url.overrideParseProxyUrl(function (url) {
+        hammerhead.utils.url.overrideParseProxyUrl(function (url) {
             return parseProxyUrl(replaceUrl(url, (u) => shuffler.unshuffle(u), false));
         });
         // manual hooks //
@@ -306,8 +304,8 @@
     }
     function fixUrlRewrite() {
         const port = location.port || (location.protocol === 'https:' ? '443' : '80');
-        const getProxyUrl = window['%hammerhead%'].utils.url.getProxyUrl;
-        window['%hammerhead%'].utils.url.overrideGetProxyUrl(function (url, opts = {}) {
+        const getProxyUrl = hammerhead.utils.url.getProxyUrl;
+        hammerhead.utils.url.overrideGetProxyUrl(function (url, opts = {}) {
             if (!opts.proxyPort) {
                 opts.proxyPort = port;
             }
@@ -345,7 +343,7 @@
             HTMLSourceElement: ['src'],
             HTMLTrackElement: ['src']
         };
-        const urlRewrite = (url) => (window['%hammerhead%'].utils.url.parseProxyUrl(url) || {}).destUrl || url;
+        const urlRewrite = (url) => (hammerhead.utils.url.parseProxyUrl(url) || {}).destUrl || url;
         for (const ElementClass in fixList) {
             for (const attr of fixList[ElementClass]) {
                 if (!window[ElementClass]) {
@@ -376,51 +374,103 @@
             }
         }
     }
-    function fixProxyEmbed() {
-        window.overrideIsCrossDomainWindows(
-            (isCrossDomainWindows) =>
-                function (win1, win2) {
-                    let isCrossDomain = isCrossDomainWindows(win1, win2);
-                    if (!isCrossDomain && (win1 && !!win1['%hammerhead%']) === (win2 && !!win2['%hammerhead%'])) {
-                        return false;
-                    }
-                    return true;
-                }
-        );
-    }
     function fixCrossWindowLocalStorage() {
-        const hookFunction = (obj, prop, beforeCall, afterCall) => {
-            obj[prop] = new window['%hammerhead%'].nativeMethods.Proxy(obj[prop], {
-                apply(target, thisArg, args) {
-                    if (beforeCall) beforeCall();
-                    const returnVal = Reflect.apply(target, thisArg, args);
-                    if (afterCall) afterCall();
-                    return returnVal;
+        // completely replace hammerhead's implementation as restore() and save() on every
+        // call is just not viable (mainly memory issues as the garbage collector is sometimes not fast enough)
+
+        const prefix = `rammerhead|storage-wrapper|${hammerhead.settings._settings.sessionId}|${
+            window.__get$(window, 'location').host
+        }|`;
+        const toRealStorageKey = (key = '') => prefix + key;
+        const fromRealStorageKey = (key = '') => {
+            if (!key.startsWith(prefix)) return null;
+            return key.slice(prefix.length);
+        };
+
+        const replaceStorageInstance = (storageProp, realStorage) => {
+            const reservedProps = ['internal', 'clear', 'key', 'getItem', 'setItem', 'removeItem', 'length'];
+            Object.defineProperty(window, storageProp, {
+                // define a value-based instead of getter-based property, since with this localStorage implementation,
+                // we don't need to rely on sharing a single memory-based storage across frames, unlike hammerhead
+                configurable: true,
+                writable: true,
+                // still use window[storageProp] as basis to allow scripts to access localStorage.internal
+                value: new Proxy(window[storageProp], {
+                    get(target, prop, receiver) {
+                        if (reservedProps.includes(prop) && prop !== 'length') {
+                            return Reflect.get(target, prop, receiver);
+                        } else if (prop === 'length') {
+                            let len = 0;
+                            for (const [key] of Object.entries(realStorage)) {
+                                if (fromRealStorageKey(key)) len++;
+                            }
+                            return len;
+                        } else {
+                            return realStorage[toRealStorageKey(prop)];
+                        }
+                    },
+                    set(_, prop, value) {
+                        if (!reservedProps.includes(prop)) {
+                            realStorage[toRealStorageKey(prop)] = value;
+                        }
+                        return true;
+                    },
+                    deleteProperty(_, prop) {
+                        delete realStorage[toRealStorageKey(prop)];
+                        return true;
+                    },
+                    has(target, prop) {
+                        return toRealStorageKey(prop) in realStorage || prop in target;
+                    },
+                    ownKeys() {
+                        const list = [];
+                        for (const [key] of Object.entries(realStorage)) {
+                            const proxyKey = fromRealStorageKey(key);
+                            if (proxyKey && !reservedProps.includes(proxyKey)) list.push(proxyKey);
+                        }
+                        return list;
+                    },
+                    getOwnPropertyDescriptor(_, prop) {
+                        return Object.getOwnPropertyDescriptor(realStorage, toRealStorageKey(prop));
+                    },
+                    defineProperty(_, prop, desc) {
+                        if (!reservedProps.includes(prop)) {
+                            Object.defineProperty(realStorage, toRealStorageKey(prop), desc);
+                        }
+                        return true;
+                    }
+                })
+            });
+        };
+        const rewriteFunction = (prop, newFunc) => {
+            Storage.prototype[prop] = new Proxy(Storage.prototype[prop], {
+                apply(_, thisArg, args) {
+                    return newFunc.apply(thisArg, args);
                 }
             });
         };
-        const hookRestore = (storageProp) => {
-            const desc = Object.getOwnPropertyDescriptor(window, storageProp);
-            const storageProxy = desc.get();
-            const rewrittenProxy = new window['%hammerhead%'].nativeMethods.Proxy(storageProxy, {
-                get(target, prop, receiver) {
-                    target.restore();
-                    return Reflect.get(target, prop, receiver);
-                }
-            });
-            desc.get = () => rewrittenProxy;
-            Object.defineProperty(window, storageProp, desc);
-        };
-        hookFunction(Storage.prototype, 'getItem', () => {
-            window['%hammerhead%'].storages.localStorageProxy.restore();
-            window['%hammerhead%'].storages.sessionStorageProxy.restore();
+
+        replaceStorageInstance('localStorage', hammerhead.storages.localStorageProxy.internal.nativeStorage);
+        replaceStorageInstance('sessionStorage', hammerhead.storages.sessionStorageProxy.internal.nativeStorage);
+        rewriteFunction('clear', function () {
+            for (const [key] of Object.entries(this)) {
+                delete this[key];
+            }
         });
-        hookFunction(Storage.prototype, 'setItem', undefined, () => {
-            window['%hammerhead%'].storages.localStorageProxy.saveToNativeStorage(true);
-            window['%hammerhead%'].storages.sessionStorageProxy.saveToNativeStorage(true);
+        rewriteFunction('key', function (keyNum) {
+            return (Object.entries(this)[keyNum] || [])[0] || null;
         });
-        hookRestore('localStorage');
-        hookRestore('sessionStorage');
+        rewriteFunction('getItem', function (key) {
+            return this.internal.nativeStorage[toRealStorageKey(key)] || null;
+        });
+        rewriteFunction('setItem', function (key, value) {
+            if (key) {
+                this.internal.nativeStorage[toRealStorageKey(key)] = value;
+            }
+        });
+        rewriteFunction('removeItem', function (key) {
+            delete this.internal.nativeStorage[toRealStorageKey(key)];
+        });
     }
 
     function hookHammerheadStartOnce(callback) {

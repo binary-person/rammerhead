@@ -19,7 +19,7 @@ if (cluster.isMaster) {
 
 const logger = new RammerheadLogging({
     logLevel: config.logLevel,
-    generatePrefix: level => prefix + config.generatePrefix(level)
+    generatePrefix: (level) => prefix + config.generatePrefix(level)
 });
 
 const proxyServer = new RammerheadProxy({
@@ -55,7 +55,9 @@ exitHook(() => {
 
 if (!enableWorkers) {
     const formatUrl = (secure, hostname, port) => `${secure ? 'https' : 'http'}://${hostname}:${port}`;
-    logger.info(`(server) Rammerhead proxy is listening on ${formatUrl(config.ssl, config.bindingAddress, config.port)}`);
+    logger.info(
+        `(server) Rammerhead proxy is listening on ${formatUrl(config.ssl, config.bindingAddress, config.port)}`
+    );
 }
 
 // spawn workers if multithreading is enabled //
@@ -86,24 +88,32 @@ if (enableWorkers) {
                     }
                 }
             }
-            return sessionId.split('').map(e => e.charCodeAt());
+            return sessionId.split('').map((e) => e.charCodeAt());
         }
     };
     const closeMasters = [sticky.listen(proxyServer.server1, config.port, config.bindingAddress, stickyOptions)];
     if (config.crossDomainPort) {
-        closeMasters.push(sticky.listen(proxyServer.server2, config.crossDomainPort, config.bindingAddress, stickyOptions));
+        closeMasters.push(
+            sticky.listen(proxyServer.server2, config.crossDomainPort, config.bindingAddress, stickyOptions)
+        );
     }
 
     if (closeMasters[0]) {
         // master process //
         const formatUrl = (secure, hostname, port) => `${secure ? 'https' : 'http'}://${hostname}:${port}`;
-        logger.info(`Rammerhead proxy load balancer is listening on ${formatUrl(config.ssl, config.bindingAddress, config.port)}`);
+        logger.info(
+            `Rammerhead proxy load balancer is listening on ${formatUrl(
+                config.ssl,
+                config.bindingAddress,
+                config.port
+            )}`
+        );
 
         // nicely close proxy server and save sessions to store before we exit
-        exitHook(async done => {
+        exitHook(async (done) => {
             logger.info('Master received exit signal. Shutting down workers');
             for (const closeMaster of closeMasters) {
-                await new Promise(resolve => closeMaster(resolve));
+                await new Promise((resolve) => closeMaster(resolve));
             }
             logger.info('Closed all workers');
             done();

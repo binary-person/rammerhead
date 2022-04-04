@@ -102,8 +102,7 @@ class RammerheadProxy extends Proxy {
             // hammerhead server.listen(anything)
             const originalListen = http.Server.prototype.listen;
             http.Server.prototype.listen = function (_proxyPort) {
-                if (dontListen)
-                    return;
+                if (dontListen) return;
                 originalListen.call(this, port, bindingAddress);
             };
 
@@ -123,8 +122,7 @@ class RammerheadProxy extends Proxy {
             // we still need to make sure the proxy binds to the correct address though
             const originalListen = http.Server.prototype.listen;
             http.Server.prototype.listen = function (portArg) {
-                if (dontListen)
-                    return;
+                if (dontListen) return;
                 originalListen.call(this, portArg, bindingAddress);
             };
             super('doesntmatter', port, crossDomainPort, {
