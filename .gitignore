@@ -5,11 +5,13 @@ src/client/*.min.*
 src/client/hammerhead.js
 .env
 
-# don't commit session data
+# don't commit session and cache data
 sessions/*
+cache-js/*
 
 # but commit the empty folders
 !sessions/.gitkeep
+!cache-js/.gitkeep
 
 # ignore any custom configurations
 /config.js

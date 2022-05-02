@@ -1,3 +1,8 @@
+## v1.2.2
+
+- add disk cache option for processed JS files. fixes huge server memory usage and enables workers to share the same cache
+- update `testcafe-hammerhead` to `v24.5.18`. fixes huge server slowdowns as brotli compression level is now adjusted to a much more reasonable value
+
 ## v1.2.11
 
 - fix huge spikes of memory usage by replacing localStorage system with a custom one

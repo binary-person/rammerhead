@@ -35,6 +35,10 @@ module.exports = {
     // restrict sessions to be only used per IP
     restrictSessionToIP: true,
 
+    // use disk for caching js rewrites. set to null to use memory instead (not recommended for HDD disks)
+    diskJsCachePath: path.join(__dirname, '../cache-js'),
+    jsCacheSize: 5 * 1024 * 1024 * 1024, // recommended: 50mb for memory, 5gb for disk
+
     //// REWRITE HEADER CONFIGURATION ////
 
     // removes reverse proxy headers

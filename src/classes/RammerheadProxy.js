@@ -15,6 +15,12 @@ require('../util/fixCorsHeader');
 require('../util/fixWebsocket');
 require('../util/addMoreErrorGuards');
 require('../util/addUrlShuffling');
+require('../util/patchAsyncResourceProcessor');
+let addJSDiskCache = function(path, size) {
+    require('../util/addJSDiskCache')(path, size);
+    // modification only works once
+    addJSDiskCache = () => {};
+};
 
 /**
  * taken directly from
@@ -59,6 +65,8 @@ class RammerheadProxy extends Proxy {
      * server info (server info includes hostname, port, and protocol). Useful for a reverse proxy setup like nginx where you
      * need to rewrite the hostname/port/protocol
      * @param {boolean} options.disableLocalStorageSync - disables localStorage syncing (default: false)
+     * @param {string} options.diskJsCachePath - set to null to disable disk cache and use memory instead (disabled by default)
+     * @param {number} options.jsCacheSize - in bytes. default: 50mb
      */
     constructor({
         loggerGetIP = (req) => req.socket.remoteAddress,
@@ -76,7 +84,9 @@ class RammerheadProxy extends Proxy {
                 protocol: req.socket.encrypted ? 'https:' : 'http:'
             };
         },
-        disableLocalStorageSync = false
+        disableLocalStorageSync = false,
+        diskJsCachePath = null,
+        jsCacheSize = 50 * 1024 * 1024
     } = {}) {
         if (!crossDomainPort) {
             const httpOrHttps = ssl ? https : http;
@@ -154,6 +164,8 @@ class RammerheadProxy extends Proxy {
 
         this.loggerGetIP = loggerGetIP;
         this.logger = logger;
+
+        addJSDiskCache(diskJsCachePath, jsCacheSize);
     }
 
     // add WS routing

@@ -31,7 +31,9 @@ const proxyServer = new RammerheadProxy({
     dontListen: enableWorkers,
     ssl: config.ssl,
     getServerInfo: config.getServerInfo,
-    disableLocalStorageSync: config.disableLocalStorageSync
+    disableLocalStorageSync: config.disableLocalStorageSync,
+    diskJsCachePath: config.diskJsCachePath,
+    jsCacheSize: config.jsCacheSize
 });
 
 if (config.publicDir) addStaticDirToProxy(proxyServer, config.publicDir);
