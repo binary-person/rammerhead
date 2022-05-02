@@ -16,7 +16,7 @@ require('../util/fixWebsocket');
 require('../util/addMoreErrorGuards');
 require('../util/addUrlShuffling');
 require('../util/patchAsyncResourceProcessor');
-let addJSDiskCache = function(path, size) {
+let addJSDiskCache = function (path, size) {
     require('../util/addJSDiskCache')(path, size);
     // modification only works once
     addJSDiskCache = () => {};
