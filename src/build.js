@@ -24,6 +24,11 @@ fs.writeFileSync(
                 '!sameOriginCheck(window1Location, window2Location)',
                 '!(sameOriginCheck(window1Location, window2Location) && (!!window1["%is-hammerhead%"] === !!window2["%is-hammerhead%"]))'
             )
+            // return false when unable to convert properties on other windows to booleans (!)
+            .replace(
+                /!(parentWindow|window1|window2|window\.top)\[("%(?:is-)?hammerhead%")]/g,
+                '!(() => { try{ return $1[$2]; }catch(error){ return false } })()'
+            )
 
             // disable saving to localStorage as we are using a completely different implementation
             .replace('saveToNativeStorage = function () {', 'saveToNativeStorage = function () {return;')
