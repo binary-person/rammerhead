@@ -27,7 +27,7 @@ fs.writeFileSync(
             // return false when unable to convert properties on other windows to booleans (!)
             .replace(
                 /!(parentWindow|window1|window2|window\.top)\[("%(?:is-)?hammerhead%")]/g,
-                '!(() => { try{ return $1[$2]; }catch(error){ return false } })()'
+                '!(() => { try{ return $1[$2]; }catch(error){ return true } })()'
             )
 
             // disable saving to localStorage as we are using a completely different implementation
