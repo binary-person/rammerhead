@@ -42,14 +42,14 @@ function getResourceUrlReplacer(ctx) {
 require('testcafe-hammerhead/lib/processing/resources/index').process = async function process(ctx) {
     const { destResBody, contentInfo } = ctx;
     const { encoding, charset } = contentInfo;
-    
+
     for (const processor of RESOURCE_PROCESSORS) {
         if (!processor.shouldProcessResource(ctx)) continue;
-        
+
         const urlReplacer = getResourceUrlReplacer(ctx);
-        
+
         if (pageProcessor === processor) await ctx.prepareInjectableUserScripts();
-        
+
         const decoded = await decodeContent(destResBody, encoding, charset);
 
         // @ts-ignore: Cannot invoke an expression whose type lacks a call signature

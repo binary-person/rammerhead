@@ -1,3 +1,8 @@
+## v1.2.3
+
+- fix memory usage issues when downloading huge files
+- fix iframing cross-origin proxy
+
 ## v1.2.2
 
 - add disk cache option for processed JS files. fixes huge server memory usage and enables workers to share the same cache
