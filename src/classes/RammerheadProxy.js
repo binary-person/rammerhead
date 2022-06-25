@@ -412,7 +412,7 @@ class RammerheadProxy extends Proxy {
             crossDomainPort: serverInfo.crossDomainPort || this.crossDomainPort || serverInfo.port,
             protocol: serverInfo.protocol,
             domain: `${serverInfo.protocol}//${serverInfo.hostname}:${serverInfo.port}`,
-            cacheRequests: true
+            cacheRequests: false
         };
     }
     /**
