@@ -1,6 +1,10 @@
+const cluster = require('cluster');
+if (cluster.isMaster) {
+    require('dotenv-flow').config();
+}
+
 const exitHook = require('async-exit-hook');
 const sticky = require('sticky-session-custom');
-const cluster = require('cluster');
 const RammerheadProxy = require('../classes/RammerheadProxy');
 const addStaticDirToProxy = require('../util/addStaticDirToProxy');
 const RammerheadSessionFileCache = require('../classes/RammerheadSessionFileCache');
@@ -12,10 +16,6 @@ const getSessionId = require('../util/getSessionId');
 
 const enableWorkers = config.workers && config.workers !== 1;
 const prefix = enableWorkers ? (cluster.isMaster ? '(master) ' : `(${cluster.worker.id}) `) : '';
-
-if (cluster.isMaster) {
-    require('dotenv-flow').config();
-}
 
 const logger = new RammerheadLogging({
     logLevel: config.logLevel,

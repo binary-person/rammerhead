@@ -21,6 +21,12 @@ module.exports = function setupRoutes(proxyServer, sessionStore, logger) {
         }
         return false;
     };
+    if (process.env.DEVELOPMENT) {
+        proxyServer.GET('/garbageCollect', (req, res) => {
+            global.gc();
+            res.end('Ok');
+        });
+    }
     proxyServer.GET('/needpassword', (req, res) => {
         res.end(config.password ? 'true' : 'false');
     });
