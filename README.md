@@ -4,6 +4,8 @@
 
 Demo link: https://demo-opensource.rammerhead.org
 
+Polished closed-source-for-now browser version: https://browser.rammerhead.org (more links by awesome community members in the discord server at the end of readme)
+
 
 ## Supporting me and contributing
 
@@ -33,4 +35,4 @@ Finally run the following to start rammerhead: `node src/server.js`
 
 ## Discord server
 
-For any user-help non-issue related questions, please ask them here: [Rammerhead Support Server](https://discord.gg/VNT4E7gN5Y).
+For any user-help non-issue related questions, especially pertaining to Rammerhead Browser, please ask them here: [Rammerhead Support Server](https://discord.gg/VNT4E7gN5Y).
