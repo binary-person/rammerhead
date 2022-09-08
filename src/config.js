@@ -65,7 +65,9 @@ module.exports = {
             staleTimeout: 1000 * 60 * 60 * 24 * 3, // 3 days
             maxToLive: null,
             staleCheckInterval: 1000 * 60 * 60 * 6 // 6 hours
-        }
+        },
+        // corrupted session files happens when nodejs exits abruptly while serializing the JSON sessions to disk
+        deleteCorruptedSessions: true,
     },
 
     //// LOGGING CONFIGURATION ////

@@ -1,3 +1,7 @@
+## v1.2.4
+
+- fix crashes from corrupted sessions
+
 ## v1.2.3
 
 - fix memory usage issues when downloading huge files

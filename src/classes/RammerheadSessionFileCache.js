@@ -17,6 +17,8 @@ class RammerheadSessionFileCache extends RammerheadSessionAbstractStore {
      * @param {number} options.cacheTimeout - timeout before saving cache to disk and deleting it from the cache
      * @param {number} options.cacheCheckInterval
      * @param {boolean} options.deleteUnused - (default: true) if set to true, it deletes unused sessions when saving cache to disk
+     * @param {boolean} options.deleteCorruptedSessions - (default: true) if set to true, auto-deletes session files that
+     * give a parse error (happens when nodejs exits abruptly while serializing session to disk)
      * @param {object|null} options.staleCleanupOptions - set to null to disable cleaning up stale sessions
      * @param {number|null} options.staleCleanupOptions.staleTimeout - stale sessions that are inside saveDirectory that go over
      * this timeout will be deleted. Set to null to disable.
@@ -30,6 +32,7 @@ class RammerheadSessionFileCache extends RammerheadSessionAbstractStore {
         cacheTimeout = 1000 * 60 * 20, // 20 minutes
         cacheCheckInterval = 1000 * 60 * 10, // 10 minutes,
         deleteUnused = true,
+        deleteCorruptedSessions = true,
         staleCleanupOptions = {
             staleTimeout: 1000 * 60 * 60 * 24 * 1, // 1 day
             maxToLive: 1000 * 60 * 60 * 24 * 4, // four days
@@ -41,6 +44,7 @@ class RammerheadSessionFileCache extends RammerheadSessionAbstractStore {
         this.logger = logger;
         this.deleteUnused = deleteUnused;
         this.cacheTimeout = cacheTimeout;
+        this.deleteCorruptedSessions = deleteCorruptedSessions;
         /**
          * @type {Map.<string, RammerheadSession>}
          */
@@ -95,7 +99,19 @@ class RammerheadSessionFileCache extends RammerheadSessionAbstractStore {
             return this.cachedSessions.get(id);
         }
 
-        const session = RammerheadSession.DeserializeSession(id, fs.readFileSync(this._getSessionFilePath(id)));
+        let session;
+        try {
+            session = RammerheadSession.DeserializeSession(id, fs.readFileSync(this._getSessionFilePath(id)));
+        } catch (e) {
+            if (e.name === 'SyntaxError' && e.message.includes('JSON')) {
+                this.logger.warn(`(FileCache.get) ${id} bad JSON`);
+                if (this.deleteCorruptedSessions) {
+                    this.delete(id);
+                    this.logger.warn(`(FileCache.get) ${id} deleted because of bad JSON`);
+            }
+                return;
+            }
+        }
 
         if (updateActiveTimestamp) {
             this.logger.debug(`(FileCache.get) ${id} update active timestamp`);
