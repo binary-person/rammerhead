@@ -1,3 +1,7 @@
+## v1.2.41
+
+- handle removeStaleSessions of .get() returning undefined from corrupted session files
+
 ## v1.2.4
 
 - fix crashes from corrupted sessions

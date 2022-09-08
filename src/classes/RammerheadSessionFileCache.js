@@ -189,6 +189,10 @@ class RammerheadSessionFileCache extends RammerheadSessionAbstractStore {
         const now = Date.now();
         for (const id of sessionIds) {
             const session = this.get(id, false, false);
+            if (!session) {
+                this.logger.debug(`(FileCache._removeStaleSessions) skipping ${id} as .get() returned undefined`);
+                continue;
+            }
             if (
                 (staleTimeout && now - session.lastUsed > staleTimeout) ||
                 (maxToLive && now - session.createdAt > maxToLive)
