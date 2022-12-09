@@ -1,3 +1,7 @@
+## v1.2.42
+
+- fix localStorage's getItem referencing parent in iframes
+
 ## v1.2.41
 
 - handle removeStaleSessions of .get() returning undefined from corrupted session files

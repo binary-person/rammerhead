@@ -378,12 +378,13 @@
         // completely replace hammerhead's implementation as restore() and save() on every
         // call is just not viable (mainly memory issues as the garbage collector is sometimes not fast enough)
 
-        const prefix = `rammerhead|storage-wrapper|${hammerhead.settings._settings.sessionId}|${
-            window.__get$(window, 'location').host
+        const getLocHost = win => win.__get$(win, 'location').host;
+        const prefix = win => `rammerhead|storage-wrapper|${hammerhead.settings._settings.sessionId}|${
+            getLocHost(win)
         }|`;
-        const toRealStorageKey = (key = '') => prefix + key;
-        const fromRealStorageKey = (key = '') => {
-            if (!key.startsWith(prefix)) return null;
+        const toRealStorageKey = (key = '', win = window) => prefix(win) + key;
+        const fromRealStorageKey = (key = '', win = window) => {
+            if (!key.startsWith(prefix(win))) return null;
             return key.slice(prefix.length);
         };
 
@@ -461,15 +462,15 @@
             return (Object.entries(this)[keyNum] || [])[0] || null;
         });
         rewriteFunction('getItem', function (key) {
-            return this.internal.nativeStorage[toRealStorageKey(key)] || null;
+            return this.internal.nativeStorage[toRealStorageKey(key, this.internal.ctx)] || null;
         });
         rewriteFunction('setItem', function (key, value) {
             if (key) {
-                this.internal.nativeStorage[toRealStorageKey(key)] = value;
+                this.internal.nativeStorage[toRealStorageKey(key, this.internal.ctx)] = value;
             }
         });
         rewriteFunction('removeItem', function (key) {
-            delete this.internal.nativeStorage[toRealStorageKey(key)];
+            delete this.internal.nativeStorage[toRealStorageKey(key, this.internal.ctx)];
         });
     }
 

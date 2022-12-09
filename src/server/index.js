@@ -93,6 +93,7 @@ if (enableWorkers) {
             return sessionId.split('').map((e) => e.charCodeAt());
         }
     };
+    logger.info(JSON.stringify({ port: config.port, crossPort: config.crossDomainPort, master: cluster.isMaster }));
     const closeMasters = [sticky.listen(proxyServer.server1, config.port, config.bindingAddress, stickyOptions)];
     if (config.crossDomainPort) {
         closeMasters.push(
