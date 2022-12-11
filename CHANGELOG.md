@@ -1,3 +1,7 @@
+## v1.2.51
+
+- add newly added classes to exports in src/index.js
+
 ## v1.2.5
 
 - replace broken `keyv-lru-files` with own implementation of JS caching

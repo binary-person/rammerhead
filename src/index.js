@@ -8,6 +8,9 @@ const addStaticFilesToProxy = require('./util/addStaticDirToProxy');
 const RammerheadSessionMemoryStore = require('./classes/RammerheadMemoryStore');
 const StrShuffler = require('./util/StrShuffler');
 const URLPath = require('./util/URLPath');
+const RammerheadJSAbstractCache = require('./classes/RammerheadJSAbstractCache.js');
+const RammerheadJSFileCache = require('./classes/RammerheadJSFileCache.js');
+const RammerheadJSMemCache = require('./classes/RammerheadJSMemCache.js');
 
 module.exports = {
     RammerheadProxy,
@@ -16,6 +19,9 @@ module.exports = {
     RammerheadSessionAbstractStore,
     RammerheadSessionMemoryStore,
     RammerheadSessionFileCache,
+    RammerheadJSAbstractCache,
+    RammerheadJSFileCache,
+    RammerheadJSMemCache,
     StrShuffler,
     generateId,
     addStaticFilesToProxy,
