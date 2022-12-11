@@ -10,14 +10,15 @@ const httpResponse = require('../util/httpResponse');
 const streamToString = require('../util/streamToString');
 const URLPath = require('../util/URLPath');
 const RammerheadLogging = require('../classes/RammerheadLogging');
+const RammerheadJSMemCache = require('./RammerheadJSMemCache.js');
 
 require('../util/fixCorsHeader');
 require('../util/fixWebsocket');
 require('../util/addMoreErrorGuards');
 require('../util/addUrlShuffling');
 require('../util/patchAsyncResourceProcessor');
-let addJSDiskCache = function (path, size) {
-    require('../util/addJSDiskCache')(path, size);
+let addJSDiskCache = function (jsCache) {
+    require('../util/addJSDiskCache')(jsCache);
     // modification only works once
     addJSDiskCache = () => {};
 };
@@ -65,8 +66,7 @@ class RammerheadProxy extends Proxy {
      * server info (server info includes hostname, port, and protocol). Useful for a reverse proxy setup like nginx where you
      * need to rewrite the hostname/port/protocol
      * @param {boolean} options.disableLocalStorageSync - disables localStorage syncing (default: false)
-     * @param {string} options.diskJsCachePath - set to null to disable disk cache and use memory instead (disabled by default)
-     * @param {number} options.jsCacheSize - in bytes. default: 50mb
+     * @param {import('../classes/RammerheadJSAbstractCache.js')} options.jsCache - js cache class. (default: memory class 50mb)
      */
     constructor({
         loggerGetIP = (req) => req.socket.remoteAddress,
@@ -85,8 +85,7 @@ class RammerheadProxy extends Proxy {
             };
         },
         disableLocalStorageSync = false,
-        diskJsCachePath = null,
-        jsCacheSize = 50 * 1024 * 1024
+        jsCache = new RammerheadJSMemCache(50 * 1024 * 1024)
     } = {}) {
         if (!crossDomainPort) {
             const httpOrHttps = ssl ? https : http;
@@ -165,7 +164,7 @@ class RammerheadProxy extends Proxy {
         this.loggerGetIP = loggerGetIP;
         this.logger = logger;
 
-        addJSDiskCache(diskJsCachePath, jsCacheSize);
+        addJSDiskCache(jsCache);
     }
 
     // add WS routing

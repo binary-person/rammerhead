@@ -1,6 +1,10 @@
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const RammerheadJSMemCache = require('./classes/RammerheadJSMemCache.js');
+const RammerheadJSFileCache = require('./classes/RammerheadJSFileCache.js');
+
+const enableWorkers = os.cpus().length !== 1;
 
 module.exports = {
     //// HOSTING CONFIGURATION ////
@@ -10,7 +14,8 @@ module.exports = {
     crossDomainPort: 8081,
     publicDir: path.join(__dirname, '../public'), // set to null to disable
 
-    // if workers is null or 1, multithreading is disabled
+    // enable or disable multithreading
+    enableWorkers,
     workers: os.cpus().length,
 
     // ssl object is either null or { key: fs.readFileSync('path/to/key'), cert: fs.readFileSync('path/to/cert') }
@@ -35,9 +40,10 @@ module.exports = {
     // restrict sessions to be only used per IP
     restrictSessionToIP: true,
 
-    // use disk for caching js rewrites. set to null to use memory instead (not recommended for HDD disks)
-    diskJsCachePath: path.join(__dirname, '../cache-js'),
-    jsCacheSize: 5 * 1024 * 1024 * 1024, // recommended: 50mb for memory, 5gb for disk
+    // caching options for js rewrites. (disk caching not recommended for slow HDD disks)
+    // recommended: 50mb for memory, 5gb for disk
+    // jsCache: new RammerheadJSMemCache(5 * 1024 * 1024),
+    jsCache: new RammerheadJSFileCache(path.join(__dirname, '../cache-js'), 5 * 1024 * 1024 * 1024, 50000, enableWorkers),
 
     //// REWRITE HEADER CONFIGURATION ////
 

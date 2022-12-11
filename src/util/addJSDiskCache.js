@@ -1,7 +1,4 @@
-const LRUCache = require('lru-cache');
-const LRUFiles = require('keyv-lru-files');
 const crypto = require('crypto');
-const fs = require('fs');
 
 let cacheGet = async (_key) => {
     throw new TypeError('cannot cache get: must initialize cache settings first');
@@ -10,31 +7,15 @@ let cacheSet = async (_key, _value) => {
     throw new TypeError('cannot cache set: must initialize cache settings first');
 };
 
-module.exports = async function (diskJsCachePath, jsCacheSize) {
+/**
+ * 
+ * @param {import('../classes/RammerheadJSAbstractCache.js')} jsCache 
+ */
+module.exports = async function (jsCache) {
     const md5 = (data) => crypto.createHash('md5').update(data).digest('hex');
 
-    if (!diskJsCachePath) {
-        const jsLRUMemCache = new LRUCache({
-            max: jsCacheSize,
-            length: (n) => n.length
-        });
-        cacheGet = (key) => jsLRUMemCache.get(md5(key));
-        cacheSet = (key, value) => jsLRUMemCache.set(md5(key), value);
-    } else {
-        if (!fs.existsSync(diskJsCachePath)) {
-            throw new TypeError('disk cache folder does not exist: ' + diskJsCachePath);
-        }
-        if (!fs.lstatSync(diskJsCachePath).isDirectory()) {
-            throw new TypeError('disk cache folder must be a directory: ' + diskJsCachePath);
-        }
-        const jsLRUFileCache = new LRUFiles({
-            dir: diskJsCachePath,
-            size: jsCacheSize
-        });
-        await jsLRUFileCache.open_sqlite();
-        cacheGet = async (key) => (await jsLRUFileCache.get(md5(key)))?.toString('utf8');
-        cacheSet = async (key, value) => await jsLRUFileCache.set(md5(key), value);
-    }
+    cacheGet = async (key) => await jsCache.get(md5(key));
+    cacheSet = async (key, value) => await jsCache.set(md5(key), value);
 };
 
 // patch ScriptResourceProcessor

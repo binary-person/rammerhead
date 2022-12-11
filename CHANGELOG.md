@@ -1,3 +1,7 @@
+## v1.2.5
+
+- replace broken `keyv-lru-files` with own implementation of JS caching
+
 ## v1.2.42
 
 - fix localStorage's getItem referencing parent in iframes

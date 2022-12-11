@@ -14,8 +14,7 @@ const setupPipeline = require('./setupPipeline');
 const RammerheadLogging = require('../classes/RammerheadLogging');
 const getSessionId = require('../util/getSessionId');
 
-const enableWorkers = config.workers && config.workers !== 1;
-const prefix = enableWorkers ? (cluster.isMaster ? '(master) ' : `(${cluster.worker.id}) `) : '';
+const prefix = config.enableWorkers ? (cluster.isMaster ? '(master) ' : `(${cluster.worker.id}) `) : '';
 
 const logger = new RammerheadLogging({
     logLevel: config.logLevel,
@@ -28,12 +27,11 @@ const proxyServer = new RammerheadProxy({
     bindingAddress: config.bindingAddress,
     port: config.port,
     crossDomainPort: config.crossDomainPort,
-    dontListen: enableWorkers,
+    dontListen: config.enableWorkers,
     ssl: config.ssl,
     getServerInfo: config.getServerInfo,
     disableLocalStorageSync: config.disableLocalStorageSync,
-    diskJsCachePath: config.diskJsCachePath,
-    jsCacheSize: config.jsCacheSize
+    jsCache: config.jsCache
 });
 
 if (config.publicDir) addStaticDirToProxy(proxyServer, config.publicDir);
@@ -55,7 +53,7 @@ exitHook(() => {
     logger.info('(server) Closed proxy server');
 });
 
-if (!enableWorkers) {
+if (!config.enableWorkers) {
     const formatUrl = (secure, hostname, port) => `${secure ? 'https' : 'http'}://${hostname}:${port}`;
     logger.info(
         `(server) Rammerhead proxy is listening on ${formatUrl(config.ssl, config.bindingAddress, config.port)}`
@@ -63,7 +61,7 @@ if (!enableWorkers) {
 }
 
 // spawn workers if multithreading is enabled //
-if (enableWorkers) {
+if (config.enableWorkers) {
     /**
      * @type {import('sticky-session-custom/lib/sticky/master').MasterOptions}
      */
