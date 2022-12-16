@@ -1,3 +1,9 @@
+## v1.2.6
+
+- properly fixed window.top issues when window.top isn't hammerhead
+- replace unreliable `win.__get$(win, 'location')` with just rewriting the url directly 
+- fix worker-hammerhead.js proxy url rewriting port undefined when 443 or 80
+
 ## v1.2.51
 
 - add newly added classes to exports in src/index.js

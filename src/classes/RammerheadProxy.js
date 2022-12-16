@@ -557,6 +557,11 @@ class RammerheadProxy extends Proxy {
                 path.join(__dirname, '../client/hammerhead' + (process.env.DEVELOPMENT ? '.js' : '.min.js'))
             );
         }
+        if (route === '/worker-hammerhead.js') {
+            handler.content = fs.readFileSync(
+                path.join(__dirname, '../client/worker-hammerhead' + (process.env.DEVELOPMENT ? '.js' : '.min.js'))
+            );
+        }
         super.GET(route, handler);
     }
 

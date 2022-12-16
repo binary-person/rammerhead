@@ -3,6 +3,7 @@ node_modules/
 # don't commit generated builds or env files
 src/client/*.min.*
 src/client/hammerhead.js
+src/client/worker-hammerhead.js
 .env
 
 # don't commit session and cache data

@@ -378,7 +378,7 @@
         // completely replace hammerhead's implementation as restore() and save() on every
         // call is just not viable (mainly memory issues as the garbage collector is sometimes not fast enough)
 
-        const getLocHost = win => win.__get$(win, 'location').host;
+        const getLocHost = win => (new URL(hammerhead.utils.url.parseProxyUrl(win.location.href).destUrl)).host;
         const prefix = win => `rammerhead|storage-wrapper|${hammerhead.settings._settings.sessionId}|${
             getLocHost(win)
         }|`;
