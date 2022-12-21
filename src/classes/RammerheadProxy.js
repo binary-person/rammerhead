@@ -13,6 +13,7 @@ const RammerheadLogging = require('../classes/RammerheadLogging');
 const RammerheadJSMemCache = require('./RammerheadJSMemCache.js');
 
 require('../util/fixCorsHeader');
+require('../util/fixCorsMissingOriginHeader.js');
 require('../util/fixWebsocket');
 require('../util/addMoreErrorGuards');
 require('../util/addUrlShuffling');

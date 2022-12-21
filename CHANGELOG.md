@@ -1,3 +1,7 @@
+## v1.2.61
+
+- fix missing cors origin header when port and crossDomainPort are the same
+
 ## v1.2.6
 
 - properly fixed window.top issues when window.top isn't hammerhead
