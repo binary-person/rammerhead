@@ -15,7 +15,10 @@ module.exports = async function (jsCache) {
     const md5 = (data) => crypto.createHash('md5').update(data).digest('hex');
 
     cacheGet = async (key) => await jsCache.get(md5(key));
-    cacheSet = async (key, value) => await jsCache.set(md5(key), value);
+    cacheSet = async (key, value) => {
+        if (!value) return;
+        await jsCache.set(md5(key), value);
+    }
 };
 
 // patch ScriptResourceProcessor

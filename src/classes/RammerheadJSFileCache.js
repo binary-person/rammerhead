@@ -36,7 +36,7 @@ class RammerheadJSFileCache {
     this.lruMarker = new LRUCache({
       max: maxItems,
       maxSize: jsCacheSize,
-      sizeCalculation: n => n,
+      sizeCalculation: n => n || 1,
       dispose(_, key) {
         fs.unlinkSync(path.join(diskJsCachePath, key));
       }
@@ -55,6 +55,11 @@ class RammerheadJSFileCache {
       initFileList.sort((a, b) => a.size - b.size);
 
       for (const file of initFileList) {
+        if (!file.size) {
+          // writing probably got interrupted. so we delete the corrupted file
+          fs.unlinkSync(path.join(diskJsCachePath, file.key));
+          continue;
+        }
         this.lruMarker.set(file.key, file.size, {
           noDisposeOnSet: true
         });

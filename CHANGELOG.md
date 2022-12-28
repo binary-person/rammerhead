@@ -1,3 +1,7 @@
+## v1.2.62
+
+- fix throw error on empty files
+
 ## v1.2.61
 
 - fix missing cors origin header when port and crossDomainPort are the same

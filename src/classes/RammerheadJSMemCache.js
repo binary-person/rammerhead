@@ -4,7 +4,7 @@ class RammerheadJSMemCache {
   constructor(jsCacheSize) {
     this.lru = new LRUCache({
       maxSize: jsCacheSize,
-      sizeCalculation: n => n.length
+      sizeCalculation: n => n.length || 1
     });
   }
   get(key) {
