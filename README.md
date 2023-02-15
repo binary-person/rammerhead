@@ -19,7 +19,17 @@ Package is for those who want a fully-configurable proxy that works on many site
 ## Effectiveness of proxy
 
 This proxy supports proxying
-- basically everything except google logins
+- basically everything
+
+## To sign in to a Google account...
+
+You need to go through specific steps, else it will tell you that the browser is not secure.
+It may ask for a CAPTCHA, you will only be able to listen to audio one.
+
+1. In Rammerhead browser, open **classroom.google.com**
+2. Then on **Sign in to Classroom**
+3. A popup window will open, allowing you to sign in without any error
+4. Google Classroom will now open, and your google account will be logged in. You can close Classroom, and I advise you to save the rammerhead backup to avoid the hassle of completing captcha.
 
 ## Features of proxy
 
