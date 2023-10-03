@@ -28,7 +28,7 @@
     "lru-cache": "^7.14.1",
     "mime": "^2.5.2",
     "sticky-session-custom": "^1.2.0",
-    "testcafe-hammerhead": "24.5.18",
+    "testcafe-hammerhead": "31.6.2",
     "uglify-js": "^3.15.3",
     "uuid": "^8.3.2",
     "ws": "^8.2.0"

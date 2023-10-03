@@ -47,6 +47,10 @@ class RammerheadSession extends Session {
          * @type {{ host: string, hostname: string, bypassRules?: string[]; port?: string; proxyAuth?: string, authHeader?: string } | null}
          */
         this.externalProxySettings = null;
+        /**
+         * @type {{ host: string, hostname: string, bypassRules?: string[]; port?: string; proxyAuth?: string, authHeader?: string } | null}
+         */
+        this.overrideExternalProxySettings = null;
 
         // disable http2. error handling from http2 proxy client to non-http2 user is too complicated to handle
         // (status code 0, for example, will crash rammerhead)
@@ -69,7 +73,9 @@ class RammerheadSession extends Session {
         this._connectObjectToHook(this, 'createdAt');
         this._connectObjectToHook(this, 'lastUsed');
         this._connectObjectToHook(this, 'injectable');
-        this._connectObjectToHook(this, 'externalProxySettings');
+        this._connectObjectToHook(this, 'externalProxySettings', 'externalProxySettings', () => {
+            return this.overrideExternalProxySettings;
+        });
         this._connectObjectToHook(this, 'shuffleDict');
         if (!dontCookie) this._connectObjectToHook(this.cookies._cookieJar.store, 'idx', 'cookies');
     }
@@ -105,10 +111,10 @@ class RammerheadSession extends Session {
     /**
      * @private
      */
-    _connectObjectToHook(obj, prop, dataProp = prop) {
+    _connectObjectToHook(obj, prop, dataProp = prop, getOverride = (_data) => {}) {
         const originalValue = obj[prop];
         Object.defineProperty(obj, prop, {
-            get: () => this.data[dataProp],
+            get: () => getOverride(this.data[dataProp]) || this.data[dataProp],
             set: (value) => {
                 this.data[dataProp] = value;
             }

@@ -1,3 +1,8 @@
+## v1.2.7
+
+- add ability to override proxy settings on server-level basis
+- update `testcafe-hammerhead` from `24.5.18` to `31.6.2`
+
 ## v1.2.62
 
 - fix throw error on empty files
