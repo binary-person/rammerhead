@@ -105,7 +105,7 @@ class RammerheadSession extends Session {
 
     hasRequestEventListeners() {
         // force forceProxySrcForImage to be true
-        // see https://github.com/DevExpress/testcafe-hammerhead/blob/a9fbf7746ff347f7bdafe1f80cf7135eeac21e34/src/session/index.ts#L180
+        // see https://github.com/DevExpress/testcafe-hammerhead/blob/47f8b6e370c37f2112fd7f56a3d493fbfcd7ec99/src/session/index.ts#L166
         return true;
     }
     /**

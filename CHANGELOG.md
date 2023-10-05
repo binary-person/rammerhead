@@ -1,4 +1,4 @@
-## v1.2.7
+## v1.2.63
 
 - add ability to override proxy settings on server-level basis
 - update `testcafe-hammerhead` from `24.5.18` to `31.6.2`

@@ -1,4 +1,4 @@
-// https://github.com/DevExpress/testcafe-hammerhead/blob/7f80940225bc1c615517455dc7d30452b0365243/src/processing/resources/index.ts
+// https://github.com/DevExpress/testcafe-hammerhead/blob/47f8b6e370c37f2112fd7f56a3d493fbfcd7ec99/src/processing/resources/index.ts
 
 const url = require('url');
 const pageProcessor = require('testcafe-hammerhead/lib/processing/resources/page');
@@ -14,7 +14,10 @@ const DISK_RE = /^[A-Za-z]:/;
 const RESOURCE_PROCESSORS = [pageProcessor, manifestProcessor, scriptProcessor, stylesheetProcessor];
 
 function getResourceUrlReplacer(ctx) {
-    return function (resourceUrl, resourceType, charsetAttrValue, baseUrl, isCrossDomain) {
+    return function urlReplacer(resourceUrl, resourceType, charsetAttrValue, baseUrl, isCrossDomain = false, isUrlsSet = false) {
+        if (isUrlsSet)
+            return urlUtil.handleUrlsSet(urlReplacer, resourceUrl, resourceType, charsetAttrValue, baseUrl, isCrossDomain);
+
         if (!urlUtil.isSupportedProtocol(resourceUrl) && !urlUtil.isSpecialPage(resourceUrl)) return resourceUrl;
 
         if (IS_WIN && ctx.dest.protocol === 'file:' && DISK_RE.test(resourceUrl)) resourceUrl = '/' + resourceUrl;
@@ -48,7 +51,7 @@ require('testcafe-hammerhead/lib/processing/resources/index').process = async fu
 
         const urlReplacer = getResourceUrlReplacer(ctx);
 
-        if (pageProcessor === processor) await ctx.prepareInjectableUserScripts();
+        if (pageProcessor === processor) await ctx.prepareInjectableUserScripts(ctx.eventFactory, ctx.session.injectable.userScripts);
 
         const decoded = await decodeContent(destResBody, encoding, charset);
 

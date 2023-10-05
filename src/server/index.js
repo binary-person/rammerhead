@@ -123,3 +123,7 @@ if (config.enableWorkers) {
         logger.info(`Worker ${cluster.worker.id} is running`);
     }
 }
+
+// if you want to just extend the functionality of this proxy server, you can
+// easily do so using this. mainly used for debugging
+module.exports = proxyServer;

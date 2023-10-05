@@ -21,12 +21,12 @@ require('../util/patchAsyncResourceProcessor');
 let addJSDiskCache = function (jsCache) {
     require('../util/addJSDiskCache')(jsCache);
     // modification only works once
-    addJSDiskCache = () => {};
+    addJSDiskCache = () => { };
 };
 
 /**
  * taken directly from
- * https://github.com/DevExpress/testcafe-hammerhead/blob/a9fbf7746ff347f7bdafe1f80cf7135eeac21e34/src/typings/proxy.d.ts#L1
+ * https://github.com/DevExpress/testcafe-hammerhead/blob/47f8b6e370c37f2112fd7f56a3d493fbfcd7ec99/src/typings/proxy.d.ts#L1
  * @typedef {object} ServerInfo
  * @property {string} hostname
  * @property {number} port
@@ -34,6 +34,22 @@ let addJSDiskCache = function (jsCache) {
  * @property {string} protocol
  * @property {string} domain
  * @property {boolean} cacheRequests
+ * @property {any?} wss
+ */
+
+/**
+ * taken directly from
+ * https://github.com/DevExpress/testcafe-hammerhead/blob/47f8b6e370c37f2112fd7f56a3d493fbfcd7ec99/src/typings/proxy.d.ts#L39
+ * @typedef {object} ProxyOptions
+ * @property {string} hostname
+ * @property {number} port1
+ * @property {number} port2
+ * @property {object?} ssl
+ * @property {boolean?} developmentMode
+ * @property {boolean?} cache
+ * @property {boolean?} disableHttp2
+ * @property {boolean?} disableCrossDomain
+ * @property {boolean?} nativeAutomation
  */
 
 /**
@@ -88,6 +104,12 @@ class RammerheadProxy extends Proxy {
         disableLocalStorageSync = false,
         jsCache = new RammerheadJSMemCache(50 * 1024 * 1024)
     } = {}) {
+        // as of testcafe-hammerhead version 31.6.2, they put the code for starting the server in a separate "start()"
+        // method. due to the proxy focused nature of rammerhead, and backwards-compatibility, there won't be a need for
+        // start()
+
+        super({ staticContentCaching: true });
+
         if (!crossDomainPort) {
             const httpOrHttps = ssl ? https : http;
             const proxyHttpOrHttps = http;
@@ -99,7 +121,7 @@ class RammerheadProxy extends Proxy {
             // a downside to using only one proxy server is that crossdomain requests
             // will not be simulated correctly
             proxyHttpOrHttps.createServer = function (...args) {
-                const emptyFunc = () => {};
+                const emptyFunc = () => { };
                 if (onlyOneHttpServer) {
                     // createServer for server1 already called. now we return a mock http server for server2
                     return { on: emptyFunc, listen: emptyFunc, close: emptyFunc };
@@ -118,10 +140,13 @@ class RammerheadProxy extends Proxy {
 
             // actual proxy initialization
             // the values don't matter (except for developmentMode), since we'll be rewriting serverInfo anyway
-            super('hostname', 'port', 'port', {
+            super.start({
+                hostname: 'hostname',
+                port1: 'port1',
+                port2: 'port2',
                 ssl,
                 developmentMode: true,
-                cache: true
+                disableHttp2: true
             });
 
             // restore hooked functions to their original state
@@ -135,10 +160,10 @@ class RammerheadProxy extends Proxy {
                 if (dontListen) return;
                 originalListen.call(this, portArg, bindingAddress);
             };
-            super('doesntmatter', port, crossDomainPort, {
-                ssl,
-                developmentMode: true,
-                cache: true
+            super.start({
+                hostname: 'doesntmatter',
+                port1: port,
+                port2: crossDomainPort
             });
             this.crossDomainPort = crossDomainPort;
             http.Server.prototype.listen = originalListen;
@@ -166,6 +191,10 @@ class RammerheadProxy extends Proxy {
         this.logger = logger;
 
         addJSDiskCache(jsCache);
+    }
+
+    start() {
+        throw new TypeError('rammerhead does not need a start(). server will automatically start when constructor is initialized.');
     }
 
     // add WS routing
@@ -276,7 +305,7 @@ class RammerheadProxy extends Proxy {
             return !!this.getWSRoute(req);
         }
         // code modified from
-        // https://github.com/DevExpress/testcafe-hammerhead/blob/879d6ae205bb711dfba8c1c88db635e8803b8840/src/proxy/router.ts#L95
+        // https://github.com/DevExpress/testcafe-hammerhead/blob/47f8b6e370c37f2112fd7f56a3d493fbfcd7ec99/src/proxy/router.ts#L104
         const routerQuery = `${req.method} ${getPathname(req.url || '')}`;
         const route = this.routes.get(routerQuery);
         if (route) {

@@ -22,7 +22,7 @@ module.exports = async function (jsCache) {
 };
 
 // patch ScriptResourceProcessor
-// https://github.com/DevExpress/testcafe-hammerhead/blob/7f80940225bc1c615517455dc7d30452b0365243/src/processing/resources/script.ts#L21
+// https://github.com/DevExpress/testcafe-hammerhead/blob/47f8b6e370c37f2112fd7f56a3d493fbfcd7ec99/src/processing/resources/script.ts#L21
 
 const scriptProcessor = require('testcafe-hammerhead/lib/processing/resources/script');
 const { processScript } = require('testcafe-hammerhead/lib/processing/script');
@@ -40,7 +40,8 @@ scriptProcessor.__proto__.processResource = async function processResource(scrip
             true,
             false,
             urlReplacer,
-            ctx.destRes.headers[BUILTIN_HEADERS.serviceWorkerAllowed]
+            ctx.destRes.headers[BUILTIN_HEADERS.serviceWorkerAllowed],
+            ctx.nativeAutomation
         );
         await cacheSet(script, processedScript);
     } else processedScript = updateScriptImportUrls(processedScript, ctx.serverInfo, ctx.session.id, ctx.windowId);
