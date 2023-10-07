@@ -75,6 +75,14 @@ fs.writeFileSync(
             'setter: function (hash) {',
             '$& var url = new URL(get$$2()); url.hash = hash; window.location.hash = (new URL(convertToProxyUrl(url.href))).hash; return hash;'
         )
+        // sometimes, postMessage doesn't work as expected when
+        // postMessage gets run/received in same window without hammerhead wrappings.
+        // this is to double check hammerhead wrapped it
+        // (cloudflare's turnsile threw this error after it tried to postMessage a fail code)
+        .replace(
+            'data.type !== MessageType.Service && isWindow(target)',
+            '$& && data.type?.startsWith("hammerhead|")'
+        )
 );
 
 // fix the
@@ -87,7 +95,15 @@ fs.writeFileSync(
         .replace('proxyLocation.port.toString()', 'proxyLocation.port?.toString() || (proxyLocation.protocol === "https:" ? 443 : 80)')
 );
 
-
+// fix the
+// transport-worker.js:1022 Uncaught TypeError: Cannot read properties of undefined (reading 'toString')
+//     at transport-worker.js:1022:38
+fs.writeFileSync(
+    path.join(__dirname, './client/transport-worker.js'),
+    fs
+    .readFileSync(path.join(__dirname, '../node_modules/testcafe-hammerhead/lib/client/transport-worker.js'), 'utf8')
+    .replace('proxyLocation.port.toString()', 'proxyLocation.port?.toString() || (proxyLocation.protocol === "https:" ? 443 : 80)')
+);
 
 const minify = (fileName, newFileName) => {
     const minified = UglifyJS.minify(fs.readFileSync(path.join(__dirname, './client', fileName), 'utf8'));
@@ -100,3 +116,4 @@ const minify = (fileName, newFileName) => {
 minify('rammerhead.js', 'rammerhead.min.js');
 minify('hammerhead.js', 'hammerhead.min.js');
 minify('worker-hammerhead.js', 'worker-hammerhead.min.js');
+minify('transport-worker.js', 'transport-worker.min.js');

@@ -84,6 +84,7 @@ class RammerheadProxy extends Proxy {
      * need to rewrite the hostname/port/protocol
      * @param {boolean} options.disableLocalStorageSync - disables localStorage syncing (default: false)
      * @param {import('../classes/RammerheadJSAbstractCache.js')} options.jsCache - js cache class. (default: memory class 50mb)
+     * @param {boolean} options.disableHttp2
      */
     constructor({
         loggerGetIP = (req) => req.socket.remoteAddress,
@@ -102,7 +103,8 @@ class RammerheadProxy extends Proxy {
             };
         },
         disableLocalStorageSync = false,
-        jsCache = new RammerheadJSMemCache(50 * 1024 * 1024)
+        jsCache = new RammerheadJSMemCache(50 * 1024 * 1024),
+        disableHttp2 = false
     } = {}) {
         // as of testcafe-hammerhead version 31.6.2, they put the code for starting the server in a separate "start()"
         // method. due to the proxy focused nature of rammerhead, and backwards-compatibility, there won't be a need for
@@ -145,8 +147,7 @@ class RammerheadProxy extends Proxy {
                 port1: 'port1',
                 port2: 'port2',
                 ssl,
-                developmentMode: true,
-                disableHttp2: true
+                developmentMode: true
             });
 
             // restore hooked functions to their original state
@@ -189,6 +190,8 @@ class RammerheadProxy extends Proxy {
 
         this.loggerGetIP = loggerGetIP;
         this.logger = logger;
+        // this.disableHttp2 = disableHttp2;
+        global.rhDisableHttp2 = disableHttp2;
 
         addJSDiskCache(jsCache);
     }
@@ -590,6 +593,11 @@ class RammerheadProxy extends Proxy {
         if (route === '/worker-hammerhead.js') {
             handler.content = fs.readFileSync(
                 path.join(__dirname, '../client/worker-hammerhead' + (process.env.DEVELOPMENT ? '.js' : '.min.js'))
+            );
+        }
+        if (route === '/transport-worker.js') {
+            handler.content = fs.readFileSync(
+                path.join(__dirname, '../client/transport-worker' + (process.env.DEVELOPMENT ? '.js' : '.min.js'))
             );
         }
         super.GET(route, handler);

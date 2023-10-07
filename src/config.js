@@ -45,6 +45,12 @@ module.exports = {
     // jsCache: new RammerheadJSMemCache(5 * 1024 * 1024),
     jsCache: new RammerheadJSFileCache(path.join(__dirname, '../cache-js'), 5 * 1024 * 1024 * 1024, 50000, enableWorkers),
 
+    // whether to disable http2 support or not (from proxy to destination site).
+    // disabling may reduce number of errors/memory, but also risk
+    // removing support for picky sites like web.whatsapp.com that want
+    // the client to connect to http2 before connecting to their websocket
+    disableHttp2: false,
+
     //// REWRITE HEADER CONFIGURATION ////
 
     // removes reverse proxy headers

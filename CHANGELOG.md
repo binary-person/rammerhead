@@ -1,3 +1,8 @@
+## v1.2.64
+
+- catch websocket errors
+- re-enabled http2 by default. see `config.js` for details.
+
 ## v1.2.63
 
 - add ability to override proxy settings on server-level basis

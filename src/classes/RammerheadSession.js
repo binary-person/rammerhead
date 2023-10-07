@@ -54,7 +54,15 @@ class RammerheadSession extends Session {
 
         // disable http2. error handling from http2 proxy client to non-http2 user is too complicated to handle
         // (status code 0, for example, will crash rammerhead)
-        this.isHttp2Disabled = () => true;
+        // UPDATE: so apparently, some websites *really* want you to make an http2 connection to them before you connect
+        // to their websocket endpoint.
+        // for example, web.whatsapp.com websockets throws a 400 error even though the request is identical, with/without http2.
+        // so now, we undo the change we made that initially was to avoid the whole error mess and a potential source of memory leak.
+        // (also we got the "last resort" error handling in addMoreErrorGuards.js so everything is fine)
+        // this.isHttp2Disabled = () => true;
+        if (global.rhDisableHttp2) { // globally set from RammerheadProxy.js
+            this.disableHttp2();
+        }
 
         this.injectable.scripts.push(...prependScripts);
         this.injectable.scripts.push('/rammerhead.js');
