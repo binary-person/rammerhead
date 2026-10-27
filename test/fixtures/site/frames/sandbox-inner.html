@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+  <title>Page Title</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+</head>
+<body>
+  <script>
+    if (top == window || eval('top == window')) {
+      console.log('inner: failed iframe test: top == window');
+    }
+    if (window.top == window || eval('window.top == window')) {
+      console.log('inner: failed iframe test: window.top == window');
+    }
+    const encryptedTop = 'dG9w';
+    if (window[atob(encryptedTop)] == window || eval('window[atob(encryptedTop)] == window')) {
+      console.log('inner: failed encrypted test: window[encryptedTop] != window');
+    }
+
+
+    if (parent == window || eval('parent == window')) {
+      console.log('inner: failed iframe test: parent == window');
+    }
+    if (window.parent == window || eval('window.parent == window')) {
+      console.log('inner: failed iframe test: window.parent == window');
+    }
+    const encryptedParent = 'cGFyZW50';
+    if (window[atob(encryptedParent)] == window || eval('window.parent == window')) {
+      console.log('inner: failed encrypted test: window[encryptedParent] == window');
+    }
+
+    if (!window.frameElement || eval('!window.frameElement')) {
+      console.log('inner: failed frameElement integrity test. !window.frameElement');
+    }
+    if (window.top.frameElement || eval('window.top.frameElement')) {
+      console.log('inner: failed frameElement integrity test. !!window.top.frameElement');
+    }
+
+    console.log('done');
+  </script>
+</body>
+</html>

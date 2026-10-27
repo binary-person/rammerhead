@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <iframe id="child" src="message-port-child.html"></iframe>
+  <script>
+    // hands a MessageChannel port to the iframe, using both postMessage call forms
+    function send(form) {
+      var channel = new MessageChannel();
+      channel.port1.onmessage = function (e) { console.log(form + ': ' + e.data); };
+      var child = document.getElementById('child').contentWindow;
+      try {
+        if (form === 'options form') child.postMessage('port', { targetOrigin: '*', transfer: [channel.port2] });
+        else child.postMessage('port', '*', [channel.port2]);
+      } catch (e) {
+        console.log(form + ': failed, threw ' + e.message);
+      }
+    }
+    document.getElementById('child').onload = function () {
+      send('positional form');
+      send('options form');
+    };
+  </script>
+</body>
+</html>

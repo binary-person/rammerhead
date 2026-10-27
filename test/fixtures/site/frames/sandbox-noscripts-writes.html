@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <script>
+    // like youtube: a script-less frame the page writes html into
+    var f = document.createElement('iframe');
+    f.setAttribute('sandbox', 'allow-same-origin');
+    document.body.appendChild(f);
+    var doc = f.contentDocument;
+    for (var i = 0; i < 5; i++) {
+      doc.body.innerHTML = '<b>' + i + '</b>';
+      doc.body.insertAdjacentHTML('beforeend', '<i>' + i + '</i>');
+      var div = doc.createElement('div');
+      div.innerHTML = '<span>' + i + '</span>';
+      doc.body.appendChild(div);
+      doc.body.outerHTML;
+    }
+    doc.open();
+    doc.write('<p>written</p>');
+    doc.close();
+    var range = doc.createRange();
+    range.createContextualFragment('<u>x</u>');
+    console.log('writes done: ' + (f.contentDocument.body.textContent === 'written' ? 'ok' : 'fail ' + f.contentDocument.body.textContent));
+  </script>
+</body>
+</html>

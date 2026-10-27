@@ -2,6 +2,8 @@ const { Session } = require('testcafe-hammerhead');
 const UploadStorage = require('testcafe-hammerhead/lib/upload/storage');
 const generateId = require('../util/generateId');
 const StrShuffler = require('../util/StrShuffler');
+const { documentReferrerFor } = require('../util/referrerPolicy');
+const { pageExtrasFor } = require('../util/scriptPositions');
 
 // disable UploadStorage, a testcafe testing feature we do not need
 const emptyFunc = () => {};
@@ -12,7 +14,29 @@ UploadStorage.prototype.store = emptyFunc;
 /**
  * wrapper for initializing Session with saving capabilities
  */
+// the settings have to be in place when hammerhead starts: start() runs the storage wrappers and rammerhead.js
+// (and its start listeners) right away, and merged after the task script's start() call they read the defaults.
+// a one-time start() on the hammerhead object (rammerhead.js hooks the prototype's) adds them to start's settings,
+// then runs afterStart. one %hammerhead% literal, for the deploy rename's counts
+function rhBeforeStart(settings, afterStart) {
+    return (
+        ';(function () { var h = window["%hammerhead%"]; if (!h) return;' +
+        ' h.start = function (initSettings) { delete h.start; Object.assign(initSettings, ' +
+        JSON.stringify(settings) +
+        '); var result = h.start.apply(this, arguments);' +
+        afterStart +
+        ' return result; }; })();\n'
+    );
+}
+
 class RammerheadSession extends Session {
+    static cloudflareSolverAttached = false;
+    /**
+     * optional, set by the app for custom storage key names: (host, sessionId) -> settings object with
+     * rhStorageKeys / rhTransportQueueKey / rhCookieLetters. Null = the default names everywhere (the engine
+     * clients' fallback literals).
+     */
+    static storageKeyDeriver = null;
     data = {};
     createdAt = Date.now();
     lastUsed = Date.now();
@@ -72,7 +96,14 @@ class RammerheadSession extends Session {
         if (!dontConnectToData) {
             this.connectHammerheadToData();
         }
+
+        // force forceProxySrcForImage to be true
+        // see https://github.com/DevExpress/testcafe-hammerhead/blob/47f8b6e370c37f2112fd7f56a3d493fbfcd7ec99/src/session/index.ts#L166
+        this.requestHookEventProvider.hasRequestEventListeners = () => true;
+
+        this.onDeleteListeners = [];
     }
+
     /**
      * @param {boolean} dontCookie - set this to true if the store is using a more reliable approach to
      * saving the cookies (like in serializeSession)
@@ -90,6 +121,58 @@ class RammerheadSession extends Session {
 
     updateLastUsed() {
         this.lastUsed = Date.now();
+    }
+    /**
+     * the storage key names merge snippet, shared
+     * by the page task script and the iframe task template. about:blank frames
+     * bootstrap from the TEMPLATE (IframeSandbox evals it with live cookie/
+     * referer fills), not from the page's task script — without this, blank
+     * frames would fall back to the historical storage constants while the
+     * parent uses derived ones, splitting the site's storage in two.
+     */
+    _rhStorageSettings(serverInfo) {
+        if (!RammerheadSession.storageKeyDeriver) return null;
+        const host = String((serverInfo && serverInfo.hostname) || '').split(':')[0].toLowerCase();
+        return host ? RammerheadSession.storageKeyDeriver(host, this.id) : null;
+    }
+    async getIframeTaskScriptTemplate(serverInfo) {
+        const template = await super.getIframeTaskScriptTemplate(serverInfo);
+        const derived = this._rhStorageSettings(serverInfo);
+        if (!derived) return template;
+        // hammerhead returns the template as a json string literal (it's pasted into the task script as one)
+        return JSON.stringify(rhBeforeStart(derived, '') + JSON.parse(template));
+    }
+    // pass rammerhead settings to the page: its referrer under the site's referrer policy
+    // (read by hammerhead's document.referrer), and whether a cloudflare solver exists
+    async getTaskScript(opts) {
+        const script = await super.getTaskScript(opts);
+        const settings = { rhCloudflareSolver: RammerheadSession.cloudflareSolverAttached };
+        const referrer = documentReferrerFor(this, opts.cookieUrl);
+        if (referrer !== undefined) settings.rhReferrer = referrer;
+        // storage key names from the app's deriver (storageKeyDeriver). The
+        // storage wrappers initialize at page boot before any fetch can
+        // complete, so this must ride the task script, not an api call.
+        if (RammerheadSession.storageKeyDeriver) {
+            const host = String((opts && opts.serverInfo && opts.serverInfo.hostname) || '').split(':')[0].toLowerCase();
+            const derived = host ? RammerheadSession.storageKeyDeriver(host, this.id) : null;
+            if (derived) Object.assign(settings, derived);
+        }
+        // inline script positions and the page's own sizes, keyed by the url stack traces and timing use
+        const extras = pageExtrasFor(this, opts.cookieUrl);
+        let registry = '';
+        if (extras) {
+            // keyed by the site's url: the page's proxy url gets shuffled after load, so entries and frames
+            // may carry either form (lookups parse them, see rammerhead.js)
+            const url = 'h.utils.url.parseProxyUrl(location.href).destUrl.split("#")[0]';
+            if (extras.positions) registry += ' (h.rhPositions || (h.rhPositions = new Map())).set(' + url + ', ' + JSON.stringify(extras.positions) + ');';
+            registry += ' (h.rhResourceSizes || (h.rhResourceSizes = new Map())).set(' + url + ', ' + JSON.stringify(extras.sizes) + ');';
+        }
+        // drop hammerhead's injected elements once they've run (anti-bot scripts walk the dom)
+        const afterStart =
+            registry +
+            ' var nm = h.nativeMethods, els = nm.querySelectorAll.call(document, ".script-hammerhead-shadow-ui, .charset-hammerhead-shadow-ui");' +
+            ' for (var i = 0; i < els.length; i++) if (els[i].parentNode) nm.removeChild.call(els[i].parentNode, els[i]);';
+        return rhBeforeStart(settings, afterStart) + script;
     }
     serializeSession() {
         return JSON.stringify({
@@ -111,11 +194,33 @@ class RammerheadSession extends Session {
         return session;
     }
 
-    hasRequestEventListeners() {
-        // force forceProxySrcForImage to be true
-        // see https://github.com/DevExpress/testcafe-hammerhead/blob/47f8b6e370c37f2112fd7f56a3d493fbfcd7ec99/src/session/index.ts#L166
-        return true;
+    /**
+     * 
+     * @param {() => void} callback 
+     */
+    onDelete(callback) {
+        this.onDeleteListeners.push(callback);
     }
+
+    /**
+     * 
+     * @param {() => void} callback 
+     */
+    removeOnDelete(callback) {
+        const idx = this.onDeleteListeners.indexOf(callback);
+        if (idx !== -1) this.onDeleteListeners.splice(idx, 1);
+    }
+
+    runOnDeleteCallbacks() {
+        for (const cb of this.onDeleteListeners) {
+            try {
+                cb();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    }
+
     /**
      * @private
      */

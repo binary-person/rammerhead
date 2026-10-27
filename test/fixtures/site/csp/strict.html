@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script nonce="rhtest">
+  // csp enforcement as a page sees it, like turnstile's self-tests. same output direct and proxied
+  var pending = 1, violations = [], fields = {};
+  function report(name, value) { console.log('csp ' + name + ': ' + value); }
+  function done() { if (--pending === 0) { report('violations', violations.sort().join(' | ')); report('violation fields', Object.keys(fields).join(' || ')); console.log('csp done'); } }
+  document.addEventListener('securitypolicyviolation', function (e) {
+    // not sourceFile: through the proxy the browser blames hammerhead's frame
+    violations.push([e.violatedDirective, e.effectiveDirective, e.blockedURI.replace(/[0-9a-f-]{36}/, 'ID'), e.disposition].join(','));
+    if (e.effectiveDirective === 'script-src-elem') fields[[e.originalPolicy, e.documentURI, e.sourceFile, e.referrer].join(' | ')] = 1;
+  });
+  function probe(name, fn) { pending++; try { fn(function (v) { report(name, v); done(); }); } catch (e) { report(name, 'threw ' + e.name); done(); } }
+  probe('eval', function (cb) { cb(eval('1 + 1')); });
+  probe('function constructor', function (cb) { cb(new Function('return 3')()); });
+  probe('inline handler', function (cb) {
+    var d = document.createElement('div');
+    window.rhHandlerRan = false;
+    d.setAttribute('onclick', 'window.rhHandlerRan = true');
+    document.documentElement.appendChild(d);
+    d.click();
+    cb(window.rhHandlerRan);
+  });
+  probe('data script', function (cb) {
+    var s = document.createElement('script');
+    s.src = 'data:,window.rhDataRan=1';
+    s.onload = function () { cb('loaded ' + !!window.rhDataRan); };
+    s.onerror = function () { cb('error'); };
+    document.head.appendChild(s);
+  });
+  probe('inline script without nonce', function (cb) {
+    var s = document.createElement('script');
+    s.textContent = 'window.rhInlineRan = 1';
+    document.head.appendChild(s);
+    cb(!!window.rhInlineRan);
+  });
+  probe('inline script with nonce', function (cb) {
+    var s = document.createElement('script');
+    s.nonce = 'rhtest';
+    s.textContent = 'window.rhNonceRan = 1';
+    document.head.appendChild(s);
+    cb(!!window.rhNonceRan);
+  });
+  probe('cross-origin img', function (cb) {
+    var i = new Image();
+    i.onload = function () { cb('loaded'); };
+    i.onerror = function () { cb('error'); };
+    i.src = 'http://localhost:18090/csp/pixel.png';
+  });
+  probe('fetch cross-origin', function (cb) {
+    fetch('http://localhost:18090/csp/pixel.png').then(function () { cb('ok'); }, function (e) { cb(e.name); });
+  });
+  probe('nonce attribute', function (cb) { cb(JSON.stringify([document.scripts[0].nonce, document.scripts[0].getAttribute('nonce')])); });
+  // turnstile: a srcdoc frame with its own meta policy (nonce only, no unsafe-eval)
+  probe('srcdoc', function (cb) {
+    var f = document.createElement('iframe');
+    f.style.display = 'none';
+    f.srcdoc = '<html><meta http-equiv="content-security-policy" content="script-src \'nonce-rhtest\'"><script nonce="rhtest">window.rhRan = 1<\/script>';
+    f.onload = function () {
+      var w = f.contentWindow, out = [w.rhRan === 1];
+      try { out.push(w.eval('0')); } catch (e) { out.push(e.name); }
+      var s = f.contentDocument.createElement('script');
+      s.src = 'data:,0';
+      s.onerror = function () { out.push('data error'); cb(out.join(' ')); };
+      s.onload = function () { out.push('data loaded'); cb(out.join(' ')); };
+      f.contentDocument.head.appendChild(s);
+    };
+    document.documentElement.appendChild(f);
+  });
+  // about:blank frames inherit the page's policy
+  probe('about:blank', function (cb) {
+    var f = document.createElement('iframe');
+    f.style.display = 'none';
+    document.documentElement.appendChild(f);
+    var w = f.contentWindow, out = [];
+    try { out.push(w.eval('2')); } catch (e) { out.push(e.name); }
+    var d = f.contentDocument.createElement('div');
+    w.rhBlankHandler = false;
+    d.setAttribute('onclick', 'window.rhBlankHandler = true');
+    f.contentDocument.body.appendChild(d);
+    d.click();
+    out.push(w.rhBlankHandler);
+    cb(out.join(' '));
+  });
+  probe('worker', function (cb) {
+    var w = new Worker(URL.createObjectURL(new Blob(['postMessage(typeof eval("1"))'], { type: 'text/javascript' })));
+    w.onmessage = function (e) { cb(e.data); };
+    w.onerror = function () { cb('error'); };
+  });
+  done();
+</script>
+</head>
+<body></body>
+</html>

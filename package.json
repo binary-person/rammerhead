@@ -1,6 +1,6 @@
 {
   "name": "rammerhead",
-  "version": "1.2.64",
+  "version": "1.3.1",
   "description": "User friendly web proxy powered by testcafe-hammerhead",
   "main": "src/index.js",
   "scripts": {
@@ -8,10 +8,11 @@
     "start": "node src/server.js",
     "build": "node src/build.js",
     "bstart": "npm run build && npm run start",
-    "test": "npm run format && npm run lint && npm run build",
+    "test": "node src/build.js && node --test --test-concurrency=1 \"test/**/*.test.js\"",
     "lint": "eslint -c .eslintrc.json --ext .js src",
     "format": "prettier --write 'src/**/*.js'",
-    "clientes5": "es-check es5 src/client/*.js public/**/*.js"
+    "clientes5": "es-check es5 src/client/*.js public/**/*.js",
+    "check": "npm run format && npm run lint && npm run build"
   },
   "repository": {
     "type": "git",
@@ -25,10 +26,15 @@
   "homepage": "https://github.com/binary-person/rammerhead#readme",
   "dependencies": {
     "async-exit-hook": "^2.0.1",
+    "crypto-md5": "^1.0.0",
+    "http-proxy-agent": "^7.0.0",
     "lru-cache": "^7.14.1",
     "mime": "^2.5.2",
+    "node-fetch": "^2.7.0",
+    "psl": "^1.9.0",
+    "socksv5": "^0.0.6",
     "sticky-session-custom": "^1.2.0",
-    "testcafe-hammerhead": "31.6.2",
+    "testcafe-hammerhead": "31.7.1",
     "uglify-js": "^3.15.3",
     "uuid": "^8.3.2",
     "ws": "^8.2.0"
@@ -38,6 +44,7 @@
     "dotenv-flow": "^3.2.0",
     "eslint": "^7.32.0",
     "npm-force-resolutions": "0.0.10",
+    "playwright": "^1.64.0",
     "prettier": "^2.3.2"
   },
   "resolutions": {
@@ -48,5 +55,8 @@
     "CHANGELOG.md",
     "package.json",
     "README.md"
-  ]
+  ],
+  "engines": {
+    "node": ">=18"
+  }
 }

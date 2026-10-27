@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script>
+  // allowed by the header policy's hash
+  window.rhA = location.href.indexOf('hashes') !== -1;
+  console.log('hash a ran ' + window.rhA);
+</script>
+<meta http-equiv="content-security-policy" content="script-src 'sha256-B9u9OLaSxRhyghN7UYaZf5nxcqvxWAz7cUaVSkd4ts0='">
+<script>
+  window.rhC = true;
+</script>
+<script>
+  // allowed by both policies' hashes, after the meta one applies
+  console.log('hash b ran ' + !!window.rhA);
+  console.log('hash c ran ' + !!window.rhC);
+  console.log('hash done');
+</script>
+</head>
+<body></body>
+</html>

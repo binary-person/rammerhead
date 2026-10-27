@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script nonce="rhtest">
+  // a page with a default trusted types policy sees only its own values in it (turnstile's widget has one)
+  var calls = [];
+  trustedTypes.createPolicy('default', {
+    createHTML: function (s) { calls.push('html:' + s); return ''; },
+    createScript: function (s) { calls.push('script:' + s); return null; },
+    createScriptURL: function (s) { calls.push('url:' + s); return null; }
+  });
+  var app = trustedTypes.createPolicy('app', { createHTML: function (s) { return s; } });
+  addEventListener('DOMContentLoaded', function () {
+    // trusted markup with a <style>, then into a closed shadow root
+    var root = document.body.attachShadow({ mode: 'closed' });
+    var inner = document.createElement('div');
+    inner.innerHTML = app.createHTML('<style>#rh-s { width: 33px; } #rh-s:hover { width: 34px; } #rh-u { background: url("data:,"); }</style><i id="rh-s" style="display:block"></i>');
+    root.appendChild(inner);
+    var style = document.createElement('style');
+    style.textContent = '#rh-t { width: 44px; }';
+    document.head.appendChild(style);
+    var t = document.createElement('i');
+    t.id = 'rh-t';
+    t.style.display = 'block';
+    root.appendChild(t);
+    console.log('default ' + [inner.lastChild.getBoundingClientRect().width, t.getBoundingClientRect().width].join(' ') + ' | ' + calls.join(' '));
+    console.log('default done');
+  });
+</script>
+</head>
+<body></body>
+</html>

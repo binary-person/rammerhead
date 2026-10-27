@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<body>
+<a id="abs" href="https://example.com/docs/file.pdf">pdf</a>
+<a id="rel" href="/frames/page.html"><span id="inner">x</span></a>
+<a id="hash" href="#top">top</a>
+<script src="/frames/url-selectors.js?id=otSDKStub" data-domain-script="abc"></script>
+<script>
+    // pages find elements by their urls (onetrust: script[src*='otSDKStub'])
+    var log = function (name, ok) { console.log(name + ': ' + (ok ? 'ok' : 'fail')); };
+    var stub = document.querySelector("script[src*='otSDKStub']");
+    log('script by src substring', stub && stub.getAttribute('data-domain-script') === 'abc');
+    log('starts with', document.querySelector('a[href^="https://example.com/docs"]') === document.getElementById('abs'));
+    log('ends with', document.querySelectorAll('a[href$=".pdf"]').length === 1);
+    log('exact relative', document.querySelector('a[href="/frames/page.html"]') === document.getElementById('rel'));
+    log('hash link', document.querySelector('a[href="#top"]') === document.getElementById('hash'));
+    log('matches', document.getElementById('abs').matches('[href*="file.pdf"]'));
+    log('closest', document.getElementById('inner').closest('a[href*="page.html"]') === document.getElementById('rel'));
+    var added = document.createElement('img');
+    added.setAttribute('src', '/frames/url-selectors.js?cdn=pixel');
+    document.body.appendChild(added);
+    log('added later', document.querySelector('img[src*="cdn=pixel"]') === added);
+    console.log('done');
+</script>
+</body>
+</html>

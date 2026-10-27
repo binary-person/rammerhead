@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <script>
+    // like youtube: a script-less frame the page uses from outside, with its own listeners, timers and html writes
+    var f = document.createElement('iframe');
+    f.setAttribute('sandbox', 'allow-same-origin');
+    document.body.appendChild(f);
+    var win = f.contentWindow;
+    var doc = f.contentDocument;
+    var got = [];
+    var b = doc.createElement('button');
+    doc.body.appendChild(b);
+    b.addEventListener('click', function () { got.push('el click'); });
+    b.onclick = function () { got.push('onclick'); };
+    doc.addEventListener('click', function () { got.push('doc click'); });
+    win.addEventListener('message', function (e) { got.push('message ' + JSON.stringify(e.data)); });
+    win.addEventListener('focus', function () { got.push('focus'); });
+    b.click();
+    win.postMessage('x', '*');
+    win.dispatchEvent(new Event('focus'));
+    // chrome doesn't run these (the frame can't run scripts); the proxy shouldn't either
+    win.setTimeout(function () { got.push('timeout'); }, 0);
+    new win.MutationObserver(function () { got.push('mutation'); }).observe(doc.body, { childList: true });
+    var errors = [];
+    try {
+      doc.body.innerHTML = '<b>1</b>';
+      doc.body.insertAdjacentHTML('beforeend', '<i>2</i>');
+      doc.body.outerHTML;
+    } catch (e) {
+      errors.push(e.message);
+    }
+    setTimeout(function () {
+      console.log('callbacks: ' + got.sort().join(','));
+      console.log('html writes: ' + (errors.length ? 'fail ' + errors.join('; ') : doc.body.textContent));
+    }, 500);
+  </script>
+</body>
+</html>

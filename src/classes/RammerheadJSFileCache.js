@@ -72,26 +72,29 @@ class RammerheadJSFileCache {
       if (cluster.isMaster) {
         cluster.on('fork', worker => {
           worker.on('message', msg => {
-            if (msg.type !== 'rjc') return;
-            if (!msg.key) throw new TypeError('missing key');
-            if (!msg.value) {
-              // read request
-              if (typeof msg.id !== 'number' || isNaN(msg.id)) throw new TypeError('missing id');
-              worker.send({ type: 'rjc', key: msg.key, id: msg.id, exists: !!this.lruMarker.get(msg.key) });
-            } else {
-              // write request
-              this.set(msg.key, msg.value);
+            if (!msg || msg.type !== 'rjc') return;
+            // fix whole-server crashes: an empty value was taken for a read without an id, and throwing here
+            // took down the master. ops are explicit now, and a bad message is dropped
+            try {
+              if (typeof msg.key !== 'string' || !msg.key) return;
+              if (msg.op === 'get') {
+                if (typeof msg.id !== 'number' || isNaN(msg.id)) return;
+                worker.send({ type: 'rjc', key: msg.key, id: msg.id, exists: !!this.lruMarker.get(msg.key) });
+              } else if (msg.op === 'set' && typeof msg.value === 'string' && msg.value) {
+                this.set(msg.key, msg.value);
+              }
+            } catch (e) {
+              console.error('(RammerheadJSFileCache) failed handling a worker message', e);
             }
           });
         });
       } else {
         this.lruMarker = null; // make sure we never use this
         process.on('message', msg => {
-          if (msg.type !== 'rjc') return;
-          if (typeof msg.id !== 'number' || isNaN(msg.id)) throw new TypeError('missing id');
-          if (typeof msg.exists !== 'boolean') throw new TypeError('missing exists');
+          if (!msg || msg.type !== 'rjc') return;
           // read-request response
-          this.askPromises[msg.id](msg.exists);
+          const resolve = this.askPromises[msg.id];
+          if (resolve) resolve(msg.exists === true);
         });
       }
     }
@@ -105,7 +108,7 @@ class RammerheadJSFileCache {
     }
     const id = this.askPromiseId++;
 
-    process.send({ type: 'rjc', id, key });
+    process.send({ type: 'rjc', op: 'get', id, key });
 
     return await new Promise(resolve => {
       this.askPromises[id] = exists => {
@@ -119,7 +122,7 @@ class RammerheadJSFileCache {
       throw new TypeError('worker use only');
     }
 
-    process.send({ type: 'rjc', key, value });
+    process.send({ type: 'rjc', op: 'set', key, value });
   }
   async get(key) {
     if (this.isWorker() ? await this.askMasterGet(key) : this.lruMarker?.get(key)) {
@@ -128,6 +131,7 @@ class RammerheadJSFileCache {
     return undefined;
   }
   set(key, value) {
+    if (typeof value !== 'string' || !value) return;
     if (this.isWorker()) {
       this.askMasterSet(key, value);
     } else {

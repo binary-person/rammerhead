@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <script>
+    // when an optional chain short-circuits, the computed key must not be evaluated.
+    // discord.com/login crashed on t?.messages[s.current % t.messages.length]
+    function check(name, fn, expected) {
+      try {
+        var actual = fn();
+        if (actual !== expected) console.log(name + ': failed, got ' + actual);
+      } catch (e) {
+        console.log(name + ': failed, threw ' + e.message);
+      }
+    }
+    var t;
+    var o = { a: { b: ['x', 'y'] }, k: 1 };
+    var calls = 0;
+
+    check('member then computed', function () { return t?.messages[0 % t.messages.length]; }, undefined);
+    check('optional computed', function () { return t?.[t.key]; }, undefined);
+    check('deeper chain', function () { return t?.a.b[t.c]; }, undefined);
+    check('call in chain', function () { return t?.get()[t.key]; }, undefined);
+    check('non-null path', function () { return o?.a.b[o.k]; }, 'y');
+    check('key evaluated once', function () { o?.a.b[(calls++, 0)]; return calls; }, 1);
+    check('this in key', function () { return o?.a.b[this.k]; }.bind(o), 'y');
+    check('eval', function () { return eval('t?.messages[t.messages.length]'); }, undefined);
+    check('chain continues after key', function () { return t?.a[t.k].b; }, undefined);
+    check('call continues after key', function () { return t?.a[t.k].b(); }, undefined);
+    check('continues with a value', function () { return o?.a.b[o.k].length; }, 1);
+    check('eval continues after key', function () { return eval('t?.a[t.k].b'); }, undefined);
+    console.log('done');
+  </script>
+</body>
+</html>

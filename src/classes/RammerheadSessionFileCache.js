@@ -123,6 +123,8 @@ class RammerheadSessionFileCache extends RammerheadSessionAbstractStore {
             this.logger.debug(`(FileCache.get) saved ${id} into cache memory`);
         }
 
+        this.runSessionCreateListeners(session);
+
         return session;
     }
     /**
@@ -146,6 +148,7 @@ class RammerheadSessionFileCache extends RammerheadSessionAbstractStore {
         this.logger.debug(`(FileCache.delete) deleting ${id}`);
         if (this.has(id)) {
             fs.unlinkSync(this._getSessionFilePath(id));
+            this.cachedSessions.get(id)?.runOnDeleteCallbacks();
             this.cachedSessions.delete(id);
             this.logger.debug(`(FileCache.delete) deleted ${id}`);
             return true;
@@ -216,6 +219,7 @@ class RammerheadSessionFileCache extends RammerheadSessionAbstractStore {
         for (const [sessionId, session] of this.cachedSessions) {
             if (forceSave || now - session.lastUsed > this.cacheTimeout) {
                 if (session.lastUsed === session.createdAt && this.deleteUnused) {
+                    session.runOnDeleteCallbacks();
                     this.cachedSessions.delete(sessionId);
                     deleteCount++;
                     this.logger.debug(`(FileCache._saveCacheToDisk) deleted unused ${sessionId} from memory`);

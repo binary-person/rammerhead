@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+    // sites that route with the navigation api (instagram) must see their own urls
+    var log = function (m) { console.log(m); };
+    if (!window.navigation) {
+        log('no navigation api');
+        log('done');
+    } else {
+        log('entry url ' + (navigation.currentEntry.url === location.href ? 'ok' : 'fail ' + navigation.currentEntry.url));
+        log('entries ' + (navigation.entries().every(function (e) { return e.url.indexOf(location.origin + '/') === 0; }) ? 'ok' : 'fail'));
+        var expected = location.href.split('#')[0] + '#routed';
+        navigation.addEventListener('navigate', function (event) {
+            log('destination ' + (event.destination.url === expected ? 'ok' : 'fail ' + event.destination.url));
+        });
+        navigation.navigate('#routed').finished.then(function () {
+            log('navigate ' + (location.hash === '#routed' && navigation.currentEntry.url === expected ? 'ok' : 'fail ' + navigation.currentEntry.url + ' ' + location.href));
+            log('done');
+        }, function (e) {
+            log('navigate fail ' + e);
+            log('done');
+        });
+    }
+</script>
+</body>
+</html>

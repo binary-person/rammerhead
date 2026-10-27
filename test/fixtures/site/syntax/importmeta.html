@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script type="module">
+    console.log(import.meta);
+    console.log(import.meta.resolve);
+    console.log(import.meta.resolve('./test.js'));
+    console.log(import.meta.url);
+
+    console.log('start test');
+    if (import.meta.url !== location.href) {
+      console.log('failed import.meta.url test');
+    }
+    if (import.meta.resolve('./test.js') !== location.href.replace('/importmeta.html', '/test.js')) {
+      console.log('failed import.meta.resolve test');
+    }
+
+    const script = document.createElement('script');
+    script.type = 'module';
+    script.textContent = `
+    if (import.meta.url !== location.href) {
+      console.log('failed client generated import.meta.url test');
+    }
+    if (import.meta.resolve('./test.js') !== location.href.replace('/importmeta.html', '/test.js')) {
+      console.log('failed client generated import.meta.resolve test');
+    }
+    console.log('script content done')
+    `;
+    document.body.appendChild(script);
+
+    import('./moduletest/moduletest.js').then(() => console.log('done')).catch(() => console.log('failed to import module'))
+  </script>
+</body>
+</html>

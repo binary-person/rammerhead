@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <script>
+    // rewritten by the proxy (location, top), yet should stringify to this source
+    function inlineFn(o) { return location.href + o.location + window.top.length; }
+    var obj = { get g() { return location.hash; } };
+    var expected = 'function inlineFn(o) { return location.href + o.location + window.top.length; }';
+    console.log('inline: ' + (inlineFn.toString() === expected ? 'ok' : 'fail, ' + inlineFn.toString()));
+    var getter = Object.getOwnPropertyDescriptor(obj, 'g').get;
+    console.log('getter: ' + (String(getter) === 'get g() { return location.hash; }' ? 'ok' : 'fail, ' + String(getter)));
+  </script>
+  <script src="function-source.js"></script>
+</body>
+</html>

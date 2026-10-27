@@ -60,6 +60,7 @@ class RammerheadSessionMemoryStore extends RammerheadSessionAbstractStore {
         this.logger.debug(`(MemoryStore.add) ${id}`);
         const session = new RammerheadSession({ id });
         this.mapStore.set(id, session);
+        this.runSessionCreateListeners(session);
         return session;
     }
     /**
@@ -67,6 +68,7 @@ class RammerheadSessionMemoryStore extends RammerheadSessionAbstractStore {
      * @returns {boolean} - returns true when a delete operation is performed
      */
     delete(id) {
+        this.get(id, false)?.runOnDeleteCallbacks();
         return this.mapStore.delete(id);
     }
     /**
@@ -78,7 +80,8 @@ class RammerheadSessionMemoryStore extends RammerheadSessionAbstractStore {
         const session = RammerheadSession.DeserializeSession(id, serializedSession);
         session.updateLastUsed();
         this.mapStore.set(id, session);
-        this.logger.debug(`(FileCache.addSerializedSession) added ${id}`);
+        this.runSessionCreateListeners(session);
+        this.logger.debug(`(MemoryStore.addSerializedSession) added ${id}`);
     }
 
     /**
@@ -95,7 +98,7 @@ class RammerheadSessionMemoryStore extends RammerheadSessionAbstractStore {
                 (staleTimeout && now - session.lastUsed > staleTimeout) ||
                 (maxToLive && now - session.createdAt > maxToLive)
             ) {
-                this.mapStore.delete(sessionId);
+                this.delete(sessionId);
                 this.logger.debug(`(MemoryStore._cleanupRun) delete ${sessionId}`);
             }
         }

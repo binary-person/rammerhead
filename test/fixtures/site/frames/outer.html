@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>outer html</title>
+</head>
+<body>
+  <script>
+    window.outersiteObj = {};
+
+    setTimeout(() => {
+      const keys = Object.keys(window.outersiteObj);
+      if (keys.length !== 4) console.log('outer: failed, expected 4 keys, got ' + keys.join(','));
+      console.log('done');
+    }, 1000);
+  </script>
+  <iframe src="inner.html"></iframe>
+</body>
+</html>

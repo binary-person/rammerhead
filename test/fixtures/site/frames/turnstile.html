@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <div id="widget"></div>
+  <script>
+    console.log('crossOriginIsolated: ' + self.crossOriginIsolated);
+    // what page code sees as the source of the widget's messages
+    window.addEventListener('message', function (e) {
+      if (!e.data || e.data.source !== 'cloudflare-challenge' || e.data.event !== 'init') return;
+      console.log('parent saw init source: ' + (e.source === window ? 'self' : e.source && e.source.parent === window ? 'child' : String(e.source)));
+      try { console.log('widget proxy href: ' + e.source.location.href.replace(/^https?:\/\/[^/]+\/[0-9a-f]+/, 'P').slice(0, 60)); } catch (x) {}
+    });
+    window.onTurnstileLoad = function () {
+      turnstile.render('#widget', { sitekey: '0x4AAAAAAADnPIDROrmt1Wwj' });
+    };
+  </script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit" async defer></script>
+</body>
+</html>

@@ -8,7 +8,7 @@ class RammerheadJSMemCache {
     });
   }
   get(key) {
-    this.lru.get(key);
+    return this.lru.get(key);
   }
   set(key, value) {
     this.lru.set(key, value);

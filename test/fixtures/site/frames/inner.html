@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>inner html</title>
+</head>
+<body>
+  <script>
+    window.innersiteObj = {};
+    window.top.outersiteObj.innersiteTop = true;
+    window.parent.outersiteObj.innersiteParent = true;
+    setTimeout(() => {
+      const keys = Object.keys(window.innersiteObj);
+      if (keys.length !== 1) console.log('inner: failed, expected 1 key, got ' + keys.join(','));
+    }, 1000);
+  </script>
+  <iframe src="innerinner.html"></iframe>
+</body>
+</html>

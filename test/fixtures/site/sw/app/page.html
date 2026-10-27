@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+    // tries to register this folder's service worker the way ?mode says (youtube passes a TrustedScriptURL)
+    (async function () {
+        var mode = new URLSearchParams(location.search).get('mode') || 'string';
+        if (mode === 'none') { console.log('done'); return; }
+        var script = 'sw.js';
+        if (mode === 'trusted') script = trustedTypes.createPolicy('t', { createScriptURL: function (u) { return u; } }).createScriptURL('sw.js');
+        if (mode === 'url') script = new URL('sw.js', location.href);
+        try {
+            await navigator.serviceWorker.register(script);
+            console.log('register: resolved');
+        } catch (e) {
+            console.log('register: rejected ' + e.name);
+        }
+        console.log('registrations: ' + (await navigator.serviceWorker.getRegistrations()).length);
+        console.log('registration: ' + (await navigator.serviceWorker.getRegistration()));
+        console.log('done');
+    })();
+</script>
+</body>
+</html>

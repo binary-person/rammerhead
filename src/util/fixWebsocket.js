@@ -27,4 +27,28 @@ hammerheadWS.respondOnWebSocket = function (ctx) {
     }
 
     respondOnWebSocket(ctx);
+    tieWebSocketLifetimes(ctx.res, ctx.destRes.socket);
 };
+
+// fix memory leak: close both sides of a websocket when either ends (hammerhead only unpipes)
+const WEBSOCKET_CLOSE_GRACE = 5000;
+function tieWebSocketLifetimes(client, site) {
+    let graceTimer = null;
+    const destroyBoth = () => {
+        clearTimeout(graceTimer);
+        // not resetAndDestroy, it throws on tls sockets
+        client.destroy();
+        site.destroy();
+    };
+    const endOther = (other) => () => {
+        // give the close frame time to go through
+        if (!other.destroyed) other.end();
+        if (!graceTimer) graceTimer = setTimeout(destroyBoth, WEBSOCKET_CLOSE_GRACE).unref();
+    };
+    client.once('end', endOther(site));
+    site.once('end', endOther(client));
+    client.once('close', destroyBoth);
+    site.once('close', destroyBoth);
+    client.on('error', destroyBoth);
+    site.on('error', destroyBoth);
+}

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <script>
+    // scripts created at runtime must be rewritten too. framed, top !== window unless hammerhead hides the host page
+    for (const prop of ['textContent', 'innerText', 'text']) {
+      const s = document.createElement('script');
+      s[prop] = 'console.log("' + prop + ': " + (top === window ? "ok" : "failed, saw the real top"));';
+      document.body.appendChild(s);
+    }
+  </script>
+</body>
+</html>

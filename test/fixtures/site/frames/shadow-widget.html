@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <div id="wrap"></div>
+  <script>
+    // like cloudflare turnstile's api.js: the widget iframe sits in a closed shadow root,
+    // is found again with shadow.querySelector, and answers the widget's init with an explicit target origin
+    var CHILD_ORIGIN = 'http://localhost:18090';
+    var host = document.createElement('div');
+    document.getElementById('wrap').appendChild(host);
+    var shadow = host.attachShadow({ mode: 'closed' });
+    var widget = document.createElement('iframe');
+    widget.id = 'w-fr';
+    widget.src = CHILD_ORIGIN + '/frames/shadow-widget-child.html';
+    shadow.appendChild(widget);
+    console.log('lookup: ' + (shadow.querySelector('#w-fr') === widget ? 'ok' : 'fail'));
+    window.addEventListener('message', function (e) {
+      if (!e.data || e.data.event !== 'init') return;
+      console.log('init origin: ' + (e.origin === CHILD_ORIGIN ? 'ok' : 'fail, ' + e.origin));
+      console.log('init source: ' + (e.source === widget.contentWindow ? 'ok' : 'fail'));
+      console.log('init isTrusted: ' + (e.isTrusted ? 'ok' : 'fail'));
+      var found = shadow.querySelector('#w-fr');
+      if (!found) return console.log('reply: fail, widget not found');
+      found.contentWindow.postMessage({ event: 'init-reply' }, CHILD_ORIGIN);
+    });
+  </script>
+</body>
+</html>

@@ -7,13 +7,19 @@ src/client/worker-hammerhead.js
 src/client/transport-worker.js
 .env
 
-# don't commit session and cache data
+# don't commit session, cache, and cf token data
 sessions/*
 cache-js/*
+cf-clearances/*
 
 # but commit the empty folders
 !sessions/.gitkeep
 !cache-js/.gitkeep
+!cf-clearances/.gitkeep
 
 # ignore any custom configurations
-/config.js
+config.js
+
+# local scratch scripts and build tarballs
+test.sh
+*.tar.bz2

@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+<body style="margin:0">
+  <!-- stands in for rammerhead-browser, which shows proxied pages inside an iframe on the proxy's own origin -->
+  <iframe id="frame" style="border:0;width:100vw;height:100vh"></iframe>
+  <script>
+    document.getElementById('frame').src = decodeURIComponent(location.hash.slice(1));
+  </script>
+</body>
+</html>

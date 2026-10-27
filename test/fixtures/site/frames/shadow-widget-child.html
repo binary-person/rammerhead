@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <script>
+    window.addEventListener('message', function (e) {
+      if (!e.data || e.data.event !== 'init-reply') return;
+      console.log('reply origin: ' + (e.origin === 'http://127.0.0.1:18090' ? 'ok' : 'fail, ' + e.origin));
+      console.log('reply isTrusted: ' + (e.isTrusted ? 'ok' : 'fail'));
+      console.log('done');
+    });
+    parent.postMessage({ event: 'init' }, '*');
+  </script>
+</body>
+</html>

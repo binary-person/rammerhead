@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <iframe id="child" src="native-postmessage-child.html"></iframe>
+  <script>
+    // the child sends with the native postMessage, skipping hammerhead's wrapping
+    var seen = {};
+    window.addEventListener('message', function (e) {
+      if (!e.data || !e.data.via || seen[e.data.via]) return;
+      seen[e.data.via] = true;
+      var origin = e.origin === 'http://127.0.0.1:18090' ? 'ok' : 'fail, ' + e.origin;
+      var source = e.source === document.getElementById('child').contentWindow ? 'ok' : 'fail';
+      console.log(e.data.via + ': origin ' + origin + ', source ' + source);
+    });
+  </script>
+</body>
+</html>

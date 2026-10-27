@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <script>
+    // native postMessage, from the parent's own property and from a fresh iframe's
+    Object.getOwnPropertyDescriptor(parent, 'postMessage').value.call(parent, { via: 'descriptor' }, '*');
+    var f = document.createElement('iframe');
+    document.body.appendChild(f);
+    Object.getOwnPropertyDescriptor(f.contentWindow, 'postMessage').value.call(parent, { via: 'fresh iframe' }, '*');
+  </script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <script>
+    // each probe creates a worker the way real sites do and logs "<name>: ok" once it replies.
+    // ?only=<name> runs a single probe so errors can be attributed
+    var only = new URLSearchParams(location.search).get('only');
+    var code = 'postMessage("pong");';
+
+    function probe(name, makeWorker) {
+      if (only && only !== name) return;
+      try {
+        var worker = makeWorker();
+        var timeout = setTimeout(function () { console.log(name + ': failed, timed out'); }, 4000);
+        worker.onmessage = function () { clearTimeout(timeout); console.log(name + ': ok'); };
+        worker.onerror = function (e) { clearTimeout(timeout); console.log(name + ': failed, ' + (e.message || e.type)); };
+      } catch (e) {
+        console.log(name + ': failed, threw ' + e.message);
+      }
+    }
+
+    probe('blob-untyped', function () { return new Worker(URL.createObjectURL(new Blob([code]))); });
+    probe('blob-js', function () { return new Worker(URL.createObjectURL(new Blob([code], { type: 'application/javascript' }))); });
+    probe('blob-module', function () { return new Worker(URL.createObjectURL(new Blob([code], { type: 'text/javascript' })), { type: 'module' }); });
+    // discord: new Worker(new URL("/assets/" + chunk, document.baseURI))
+    probe('url-string', function () { return new Worker('/workers/pong.js'); });
+    probe('url-object', function () { return new Worker(new URL('/workers/pong.js', document.baseURI)); });
+    probe('url-module', function () { return new Worker('/workers/pong.js', { type: 'module' }); });
+  </script>
+</body>
+</html>

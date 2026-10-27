@@ -1,0 +1,1 @@
+{ "content-security-policy": "require-trusted-types-for 'script'" }

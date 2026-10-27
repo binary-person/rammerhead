@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script nonce="rhtest">
+  // scripts a page adds itself that its policy allows by hash (spotify does this) run; others don't
+  function add(how, text) {
+    var s = document.createElement('script');
+    if (how === 'text') s.text = text;
+    else if (how === 'innerHTML') s.innerHTML = text;
+    else if (how === 'textContent') s.textContent = text;
+    else s.appendChild(document.createTextNode(text));
+    document.head.appendChild(s);
+    return s;
+  }
+  var a = add('textContent', "window.rhDynAllowed = (window.rhDynAllowed || 0) + 1;");
+  var b = add('text', "window.rhDynAllowed = (window.rhDynAllowed || 0) + 1;");
+  var c = add('node', "window.rhDynAllowed = (window.rhDynAllowed || 0) + 1;");
+  var d = add('innerHTML', "window.rhDynAllowed = (window.rhDynAllowed || 0) + 1;");
+  add('textContent', 'window.rhDynBlocked = 1;');
+  console.log('dyn allowed ran ' + window.rhDynAllowed);
+  console.log('dyn blocked ran ' + !!window.rhDynBlocked);
+  console.log('dyn nonce ' + JSON.stringify([a.nonce, b.nonce, c.nonce, d.nonce, a.getAttribute('nonce')]));
+  console.log('dyn done');
+</script>
+</head>
+<body></body>
+</html>

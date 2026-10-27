@@ -16,6 +16,7 @@ class RammerheadSessionAbstractStore {
         if (this.constructor === RammerheadSessionAbstractStore) {
             throw new Error('abstract classes cannot be instantiated');
         }
+        this.onSessionCreateListeners = [];
     }
 
     /**
@@ -33,6 +34,34 @@ class RammerheadSessionAbstractStore {
             }
         }
         proxy.openSessions = this;
+    }
+
+    /**
+     * 
+     * @param {(session: RammerheadSession) => void} callback 
+     */
+    onSessionCreate(callback) {
+        this.onSessionCreateListeners.push(callback);
+    }
+
+    /**
+     * 
+     * @param {() => void} callback 
+     */
+    removeOnSessionCreate(callback) {
+        const idx = this.onSessionCreateListeners.indexOf(callback);
+        if (idx !== -1) this.onSessionCreateListeners.splice(idx, 1);
+    }
+
+
+    runSessionCreateListeners(session) {
+        for (const cb of this.onSessionCreateListeners) {
+            try {
+                cb(session);
+            } catch (e) {
+                console.error(e);
+            }
+        }
     }
 
     /**

@@ -143,7 +143,7 @@
             });
         },
         shuffleDict(id, callback) {
-            get('/api/shuffleDict?id=' + encodeURIComponent(id), function (res) {
+            get('/api/dictionary?id=' + encodeURIComponent(id), function (res) {
                 callback(JSON.parse(res));
             });
         }

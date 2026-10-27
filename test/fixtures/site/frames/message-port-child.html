@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <script>
+    window.addEventListener('message', function (e) {
+      if (e.ports && e.ports[0]) e.ports[0].postMessage('ok');
+      else console.log('child: failed, got no port');
+    });
+  </script>
+</body>
+</html>

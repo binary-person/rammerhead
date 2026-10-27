@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+    // like cloudflare's bot check: a script added from inside an about:blank frame
+    var frame = document.createElement('iframe');
+    frame.style.display = 'none';
+    document.body.appendChild(frame);
+    var doc = frame.contentWindow.document;
+    var script = doc.createElement('script');
+    script.src = '/frames/blank-frame-script.js';
+    script.onerror = function () {
+        console.log('blank frame script: fail ' + script.src);
+        console.log('done');
+    };
+    (doc.head || doc.documentElement).appendChild(script);
+</script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!doctype html>
+<html>
+  <body>
+    <div id="bg1" style="width: 4px; height: 4px"></div>
+    <div id="bg2" style="width: 4px; height: 4px"></div>
+    <div id="bg3" style="width: 4px; height: 4px"></div>
+    <div id="bg4" style="width: 4px; height: 4px"></div>
+    <script>
+      var siteBlob = 'blob:' + location.origin + '/';
+      function report(name, ok) {
+        console.log(name + ': ' + (ok === true ? 'ok' : 'fail ' + ok));
+      }
+      function siteOrigin(name, value) {
+        report(name, (typeof value === 'string' && value.indexOf(siteBlob) !== -1) || value);
+      }
+      function blobOf(parts, type) {
+        return URL.createObjectURL(new Blob(parts, { type: type }));
+      }
+      // youtube plays video from a MediaSource blob url
+      var ms = new MediaSource();
+      var video = document.createElement('video');
+      ms.addEventListener('sourceopen', function () { report('video mediasource', true); });
+      video.addEventListener('error', function () { report('video mediasource', 'error ' + (video.error && video.error.message)); });
+      video.src = URL.createObjectURL(ms);
+      document.body.appendChild(video);
+      siteOrigin('video src origin', video.src);
+      siteOrigin('video getAttribute origin', video.getAttribute('src'));
+
+      var png = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='), function (c) { return c.charCodeAt(0); });
+      var pngUrl = blobOf([png], 'image/png');
+
+      var img = new Image();
+      img.onload = function () { report('img', true); };
+      img.onerror = function () { report('img', 'error'); };
+      img.src = pngUrl;
+
+      var srcsetImg = new Image();
+      srcsetImg.onload = function () { report('img srcset', true); };
+      srcsetImg.onerror = function () { report('img srcset', 'error'); };
+      srcsetImg.srcset = pngUrl + ' 1x';
+      siteOrigin('img srcset origin', srcsetImg.srcset);
+
+      var picture = document.createElement('picture');
+      var source = document.createElement('source');
+      source.setAttribute('srcset', pngUrl);
+      var pictureImg = document.createElement('img');
+      pictureImg.onload = function () { report('picture source', true); };
+      pictureImg.onerror = function () { report('picture source', 'error'); };
+      picture.appendChild(source);
+      picture.appendChild(pictureImg);
+      pictureImg.src = 'data:,';
+      document.body.appendChild(picture);
+
+      var poster = document.createElement('video');
+      poster.poster = pngUrl;
+      document.body.appendChild(poster);
+      siteOrigin('video poster origin', poster.poster);
+      siteOrigin('video poster getAttribute origin', poster.getAttribute('poster'));
+
+      // inline styles: failures show up as "Not allowed to load local resource" in the console
+      var bg = 'url("' + pngUrl + '")';
+      document.getElementById('bg1').style.backgroundImage = bg;
+      document.getElementById('bg2').setAttribute('style', 'width: 4px; height: 4px; background-image: ' + bg);
+      document.getElementById('bg3').style.cssText = 'width: 4px; height: 4px; background-image: ' + bg;
+      document.getElementById('bg4').style.setProperty('background-image', bg);
+      siteOrigin('style property origin', document.getElementById('bg1').style.backgroundImage);
+      siteOrigin('style attribute origin', document.getElementById('bg2').getAttribute('style'));
+      siteOrigin('style cssText origin', document.getElementById('bg3').style.cssText);
+      siteOrigin('style getPropertyValue origin', document.getElementById('bg4').style.getPropertyValue('background-image'));
+
+      fetch(URL.createObjectURL(new Blob(['fetch ok'])))
+        .then(function (r) { return r.text(); })
+        .then(function (t) { report('fetch', t === 'fetch ok' || t); }, function (e) { report('fetch', e.message); });
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', blobOf(['xhr ok']));
+      xhr.onload = function () { report('xhr', xhr.responseText === 'xhr ok' || xhr.responseText); };
+      xhr.onerror = function () { report('xhr', 'error'); };
+      xhr.send();
+
+      try {
+        var w = new Worker(blobOf(['postMessage("worker ok")'], 'text/javascript'));
+        w.onmessage = function (e) { report('worker', e.data === 'worker ok' || e.data); };
+        w.onerror = function () { report('worker', 'error'); };
+      } catch (e) {
+        report('worker', e.message);
+      }
+
+      // a page's blob url used inside a worker
+      try {
+        var w2 = new Worker(blobOf([
+          'onmessage = function (e) {' +
+          '  var out = {};' +
+          '  try { importScripts(e.data.script); out.importScripts = self.imported === 1 || self.imported; } catch (err) { out.importScripts = err.message; }' +
+          '  fetch(e.data.text).then(function (r) { return r.text(); }).then(function (t) { out.fetch = t === "page blob" || t; postMessage(out); }, function (err) { out.fetch = err.message; postMessage(out); });' +
+          '};'
+        ], 'text/javascript'));
+        w2.onmessage = function (e) {
+          report('worker importScripts page blob', e.data.importScripts);
+          report('worker fetch page blob', e.data.fetch);
+        };
+        w2.postMessage({ script: blobOf(['self.imported = 1;'], 'text/javascript'), text: blobOf(['page blob']) });
+      } catch (e) {
+        report('worker importScripts page blob', e.message);
+        report('worker fetch page blob', e.message);
+      }
+
+      import(blobOf(['export default "import ok"'], 'text/javascript')).then(
+        function (m) { report('dynamic import', m.default === 'import ok' || m.default); },
+        function (e) { report('dynamic import', e.message); }
+      );
+
+      var frame = document.createElement('iframe');
+      frame.onload = function () {
+        var text;
+        try { text = frame.contentDocument.body.textContent; } catch (e) { text = e.message; }
+        report('iframe', text === 'frame ok' || text);
+      };
+      frame.src = blobOf(['<body>frame ok</body>'], 'text/html');
+      document.body.appendChild(frame);
+      siteOrigin('iframe src origin', frame.src);
+
+      // fonts in stylesheets
+      function fontLoads(name, family) {
+        document.fonts.load('16px ' + family).then(
+          function (faces) { report(name, (faces.length === 1 && faces[0].status === 'loaded') || 'faces ' + faces.length); },
+          function (e) { report(name, e.message); }
+        );
+      }
+      fetch('blob-font.ttf').then(function (r) { return r.arrayBuffer(); }).then(function (buf) {
+        var fontUrl = blobOf([buf], 'font/ttf');
+        var face = function (family) { return '@font-face { font-family: ' + family + '; src: url(' + fontUrl + '); }'; };
+
+        var style = document.createElement('style');
+        style.textContent = face('BlobStyle');
+        document.head.appendChild(style);
+        fontLoads('style element font', 'BlobStyle');
+        siteOrigin('style element text origin', style.textContent);
+
+        var ruleStyle = document.createElement('style');
+        document.head.appendChild(ruleStyle);
+        ruleStyle.sheet.insertRule(face('BlobRule'));
+        fontLoads('insertRule font', 'BlobRule');
+        siteOrigin('insertRule cssText origin', ruleStyle.sheet.cssRules[0].cssText);
+
+        var constructed = new CSSStyleSheet();
+        constructed.replaceSync(face('BlobConstructed'));
+        document.adoptedStyleSheets = document.adoptedStyleSheets.concat([constructed]);
+        fontLoads('constructed sheet font', 'BlobConstructed');
+
+        new FontFace('BlobFontFace', 'url(' + fontUrl + ')').load().then(
+          function (f) { report('FontFace', f.status === 'loaded' || f.status); },
+          function (e) { report('FontFace', e.message); }
+        );
+
+        // a stylesheet that is itself a blob, pointing at another blob
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = blobOf([face('BlobLinked')], 'text/css');
+        link.onload = function () { fontLoads('blob stylesheet font', 'BlobLinked'); };
+        link.onerror = function () { report('blob stylesheet font', 'link error'); };
+        document.head.appendChild(link);
+      });
+    </script>
+  </body>
+</html>

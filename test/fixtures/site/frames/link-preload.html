@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+    // a page's script reads back the urls it put on links (google search: preload links, then rel/as)
+    var log = function (name, ok, got) { console.log(name + ': ' + (ok ? 'ok' : 'fail ' + got)); };
+    function link(href, attrs) {
+        var el = document.createElement('link');
+        el.setAttribute('href', href);
+        for (var name in attrs) el.setAttribute(name, attrs[name]);
+        document.body.appendChild(el);
+        return el;
+    }
+    var preload = link('/frames/link-preload.js?k=1', { rel: 'preload', as: 'script' });
+    log('preload as=script', preload.getAttribute('href') === '/frames/link-preload.js?k=1', preload.getAttribute('href'));
+    var modulePreload = link('/frames/link-preload.js?k=2', { rel: 'modulepreload' });
+    log('modulepreload', modulePreload.getAttribute('href') === '/frames/link-preload.js?k=2', modulePreload.getAttribute('href'));
+    var changed = link('/frames/link-preload.js?k=3', { rel: 'preload', as: 'script' });
+    changed.setAttribute('as', 'style');
+    log('as changed again', changed.getAttribute('href') === '/frames/link-preload.js?k=3', changed.getAttribute('href'));
+    var reset = link('/frames/link-preload.js?k=4', { rel: 'preload', as: 'script' });
+    reset.setAttribute('href', reset.getAttribute('href'));
+    log('href set to itself', reset.getAttribute('href') === '/frames/link-preload.js?k=4', reset.getAttribute('href'));
+    log('href property', /\/frames\/link-preload\.js\?k=1$/.test(preload.href) && preload.href.indexOf(location.host) !== -1, preload.href);
+    console.log('done');
+</script>
+</body>
+</html>

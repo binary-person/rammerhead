@@ -7,7 +7,7 @@ const getSessionId = require('../util/getSessionId');
  */
 module.exports = function setupPipeline(proxyServer, sessionStore) {
     // remove headers defined in config.js
-    proxyServer.addToOnRequestPipeline((req, res, _serverInfo, isRoute) => {
+    proxyServer.addToOnRequestPipeline((req, res, _serverInfo, isRoute, isWebsocket) => {
         if (isRoute) return; // only strip those that are going to the proxy destination website
 
         // restrict session to IP if enabled
@@ -15,7 +15,9 @@ module.exports = function setupPipeline(proxyServer, sessionStore) {
             const sessionId = getSessionId(req.url);
             const session = sessionId && sessionStore.get(sessionId);
             if (session && session.data.restrictIP && session.data.restrictIP !== config.getIP(req)) {
-                res.writeHead(403);
+                if (!isWebsocket) {
+                    res.writeHead(403);
+                }
                 res.end('Sessions must come from the same IP');
                 return true;
             }

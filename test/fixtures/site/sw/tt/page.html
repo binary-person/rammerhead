@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+    var worker = new Worker('worker.js');
+    worker.onmessage = function (e) { console.log('worker: ' + e.data); console.log('done'); };
+    worker.onerror = function (e) { console.log('fail: ' + (e.message || 'worker error')); console.log('done'); };
+    worker.postMessage('go');
+</script>
+</body>
+</html>

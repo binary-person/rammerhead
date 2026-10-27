@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>a:hover { color: red; }</style>
+</head>
+<body>
+  <a href="#">link</a>
+  <script>
+    document.write('<script src="http://' + (location.hostname === 'localhost' ? '127.0.0.1' : 'localhost') + ':18090/frames/cross-origin-script.js"><\/script>');
+  </script>
+  <script>
+    // things anti-bot scripts check that hammerhead used to change. each logs "<name>: ok" or "<name>: fail, ..."
+    // runs again in a cross-site iframe (?frame), like cloudflare's widget
+    var prefix = location.search.indexOf('frame') !== -1 ? 'frame ' : '';
+    function check(name, fn) {
+      var result;
+      try { result = fn(); } catch (e) { result = 'threw ' + e; }
+      console.log(prefix + name + ': ' + (result === true ? 'ok' : 'fail, ' + result));
+    }
+    function throwsOnCaller(f) {
+      try { f.caller; return false; } catch (e) { return !!e && e.name === 'TypeError'; }
+    }
+    var natives = {
+      fetch: window.fetch, setTimeout: window.setTimeout, 'console.log': console.log, 'console.error': console.error,
+      addEventListener: EventTarget.prototype.addEventListener, createElement: Document.prototype.createElement,
+      querySelector: Document.prototype.querySelector, appendChild: Node.prototype.appendChild,
+      setAttribute: Element.prototype.setAttribute, 'XMLHttpRequest send': XMLHttpRequest.prototype.send,
+      sendBeacon: Navigator.prototype.sendBeacon, toString: Function.prototype.toString
+    };
+    for (var n in natives) (function (n) { check('caller throws (' + n + ')', function () { return throwsOnCaller(natives[n]) || 'returned'; }); })(n);
+    // natives taken from a fresh about:blank iframe (a common way to get "clean" ones)
+    var blank = document.createElement('iframe');
+    document.body.appendChild(blank);
+    var bw = blank.contentWindow;
+    var fresh = {
+      fetch: bw.fetch, setTimeout: bw.setTimeout, 'console.log': bw.console.log,
+      addEventListener: bw.EventTarget.prototype.addEventListener, createElement: bw.Document.prototype.createElement,
+      appendChild: bw.Node.prototype.appendChild, toString: bw.Function.prototype.toString
+    };
+    for (var m in fresh) (function (m) { check('fresh iframe caller throws (' + m + ')', function () { return throwsOnCaller(fresh[m]) || 'returned'; }); })(m);
+    check('body and head query methods come from Element.prototype', function () {
+      var own = ['querySelector', 'querySelectorAll', 'getElementsByClassName'].filter(function (m) {
+        return HTMLBodyElement.prototype.hasOwnProperty(m) || HTMLHeadElement.prototype.hasOwnProperty(m);
+      });
+      return own.length === 0 || own.join(',');
+    });
+    check('prototype cycle throws', function () {
+      var cycles = [];
+      for (var n in natives) {
+        try { Object.setPrototypeOf(natives[n], natives[n]); cycles.push(n); Object.setPrototypeOf(natives[n], Function.prototype); } catch (e) {}
+      }
+      return cycles.length === 0 || 'no error for ' + cycles.join(',');
+    });
+    check('frame name for objects inheriting from natives', function () {
+      try { Function.prototype.toString.call(Object.create(window.fetch)); } catch (e) {
+        return e.stack.split('\n')[1].trim().indexOf('at Function.toString') === 0 || e.stack.split('\n')[1];
+      }
+    });
+    check('Worker source', function () {
+      return Function.prototype.toString.call(Worker) === 'function Worker() { [native code] }' || Function.prototype.toString.call(Worker);
+    });
+    check("a page's own frameElement getter runs", function () {
+      var seen = 0;
+      var getter = function () { seen++; return null; }.bind(null);
+      var original = Object.getOwnPropertyDescriptor(window, 'frameElement');
+      Object.defineProperty(window, 'frameElement', { get: getter, configurable: true });
+      var value = window.frameElement;
+      Object.defineProperty(window, 'frameElement', original);
+      return seen === 1 || 'getter ran ' + seen + ' times';
+    });
+    check('navigator methods live on prototypes', function () {
+      var own = Object.getOwnPropertyNames(navigator).concat(navigator.serviceWorker ? Object.getOwnPropertyNames(navigator.serviceWorker) : []);
+      return own.length === 0 || own.join(',');
+    });
+    check('history methods live on History.prototype', function () {
+      return (!history.hasOwnProperty('pushState') && !history.hasOwnProperty('replaceState')) || 'own property on history';
+    });
+    check('cross-origin replaceState throws', function () {
+      try { history.replaceState(null, '', 'https://example.org/'); return 'no error'; } catch (e) { return e.name === 'SecurityError' || e.name; }
+    });
+    check('getElementsByTagName(head) type', function () {
+      var c = document.getElementsByTagName('head');
+      return Object.getPrototypeOf(c) === HTMLCollection.prototype || Object.prototype.toString.call(c);
+    });
+    // dynamically inserted html keeps its shape (the turnstile widget builds its dom this way)
+    var html = '<style>a{color:red}</style><div id="w">x</div>';
+    var insertions = {
+      innerHTML: function (el) { el.innerHTML = html; },
+      insertAdjacentHTML: function (el) { el.insertAdjacentHTML('beforeend', html); },
+      outerHTML: function (el) { var t = document.createElement('div'); el.appendChild(t); t.outerHTML = html; },
+      contextualFragment: function (el) { var r = document.createRange(); r.selectNode(document.body); el.appendChild(r.createContextualFragment(html)); },
+      setHTMLUnsafe: function (el) { if (el.setHTMLUnsafe) el.setHTMLUnsafe(html); else el.innerHTML = html; }
+    };
+    for (var how in insertions) (function (how) {
+      check('dom shape after ' + how, function () {
+        var el = document.createElement('section');
+        document.body.appendChild(el);
+        insertions[how](el);
+        var tags = [];
+        for (var c = el.firstElementChild; c; c = c.nextElementSibling) tags.push(c.tagName);
+        el.remove();
+        return tags.join(',') === 'STYLE,DIV' || tags.join(',');
+      });
+    })(how);
+    check('style innerText keeps its shape', function () {
+      var style = document.createElement('style');
+      style.innerText = 'a{color:blue}';
+      document.head.appendChild(style);
+      var kids = style.childNodes.length;
+      var text = style.textContent;
+      style.remove();
+      return (kids === 1 && text === 'a{color:blue}') || kids + ' children, text ' + JSON.stringify(text);
+    });
+    check("another frame's toString sees natives", function () {
+      var f = document.createElement('iframe');
+      document.body.appendChild(f);
+      var w = f.contentWindow;
+      var leaks = ['write', 'createElement', 'getElementById'].filter(function (m) {
+        return Function.prototype.toString.call(w.document[m]).indexOf('[native code]') === -1;
+      });
+      if (Function.prototype.toString.call(w.console.log).indexOf('[native code]') === -1) leaks.push('console.log');
+      f.remove();
+      return leaks.length === 0 || leaks.join(',');
+    });
+    check("a fresh iframe's natives don't list hammerhead's keys", function () {
+      var f = document.createElement('iframe');
+      document.body.appendChild(f);
+      var w = f.contentWindow;
+      // with the renamed forms deploy builds use (%<12 hex>%, _$<12 hex>)
+      var odd = /hammerhead|^__[a-zA-Z]+\$|^%[0-9a-f]{12}%$|^_\$[0-9a-f]{12}|rammerhead|isWindowBeyondRammerhead|overrideGetProxyUrl|overrideParseProxyUrl/i;
+      var keys = w.Object.getOwnPropertyNames(window).concat(w.Object.getOwnPropertyNames(document), w.Reflect.ownKeys(w).map(String));
+      f.remove();
+      var found = keys.filter(function (k) { return odd.test(k); });
+      return found.length === 0 || found.slice(0, 8).join(',');
+    });
+    check('baseURI and referrer are site urls', function () {
+      var bad = [];
+      if (document.baseURI.indexOf(location.origin + '/') !== 0) bad.push('baseURI ' + document.baseURI);
+      if (Object.getOwnPropertyDescriptor(Node.prototype, 'baseURI').get.call(document).indexOf(location.origin + '/') !== 0) bad.push('baseURI getter');
+      var f = document.createElement('iframe');
+      document.body.appendChild(f);
+      var nativeReferrer = Object.getOwnPropertyDescriptor(f.contentWindow.Document.prototype, 'referrer').get.call(document);
+      var nativeBase = Object.getOwnPropertyDescriptor(f.contentWindow.Node.prototype, 'baseURI').get.call(document);
+      f.remove();
+      if (nativeReferrer && nativeReferrer.indexOf('/_rhs') !== -1 || /localhost:18080\/[0-9a-f]{32}/.test(nativeReferrer)) bad.push('fresh referrer ' + nativeReferrer);
+      if (/localhost:18080\/[0-9a-f]{32}/.test(nativeBase)) bad.push('fresh baseURI ' + nativeBase);
+      return bad.length === 0 || bad.join('; ');
+    });
+    check('document.domain', function () {
+      var f = document.createElement('iframe');
+      document.body.appendChild(f);
+      var viaFresh = Object.getOwnPropertyDescriptor(f.contentWindow.Document.prototype, 'domain').get.call(document);
+      var blank = f.contentDocument.domain;
+      f.remove();
+      return (document.domain === location.hostname && viaFresh === location.hostname && blank === location.hostname) ||
+        [document.domain, viaFresh, blank].join(',');
+    });
+    check('getElementsByTagName type', function () {
+      return Object.prototype.toString.call(document.getElementsByTagName('head')) === '[object HTMLCollection]' || Object.prototype.toString.call(document.getElementsByTagName('head'));
+    });
+    check('querySelectorAll type', function () {
+      return document.querySelectorAll('*') instanceof NodeList || Object.prototype.toString.call(document.querySelectorAll('*'));
+    });
+    check('css text', function () {
+      var text = document.styleSheets[0].cssRules[0].cssText;
+      return text.indexOf('a:hover') === 0 || text;
+    });
+    check('blob url origin', function () {
+      var u = URL.createObjectURL(new Blob(['x']));
+      return u.indexOf('blob:' + location.origin + '/') === 0 || u;
+    });
+    check('blob url works', function () {
+      var u = URL.createObjectURL(new Blob(['blob ok'], { type: 'text/plain' }));
+      var x = new XMLHttpRequest();
+      x.open('GET', u, false);
+      x.send();
+      return x.responseText === 'blob ok' || x.responseText;
+    });
+    check('stack depth through hammerhead', function () {
+      // calls through hammerhead-wrapped natives add frames that are dropped from the trace
+      var depth;
+      [1].forEach(function () {
+        document.createElement('div').addEventListener('x', function () { depth = new Error('x').stack.split('\n').length - 1; });
+      });
+      function a(n) { return n ? a(n - 1) : (document.body.appendChild(document.createElement('span')), new Error('x').stack.split('\n').length - 1); }
+      var d = a(15);
+      return d === Error.stackTraceLimit || d + ' frames, limit ' + Error.stackTraceLimit;
+    });
+    window.addEventListener('load', function () {
+      var nav = performance.getEntriesByType('navigation')[0];
+      console.log(prefix + 'navigation size ' + (nav ? nav.decodedBodySize : 'none'));
+      // the cross-origin script (no timing-allow-origin) and the hidden server-timing entry
+      var cross = performance.getEntriesByType('resource').filter(function (e) { return /cross-origin-script\.js/.test(e.name); })[0];
+      var bad = [];
+      if (!cross) bad.push('no entry');
+      else {
+        if (cross.transferSize || cross.encodedBodySize || cross.decodedBodySize || cross.requestStart || cross.responseStart) bad.push('sizes or timings ' + cross.decodedBodySize + '/' + cross.requestStart);
+        if (cross.nextHopProtocol) bad.push('protocol ' + cross.nextHopProtocol);
+        if (JSON.stringify(cross.toJSON()).indexOf('"decodedBodySize":0') === -1) bad.push('toJSON');
+      }
+      if (nav && nav.serverTiming.some(function (t) { return t.name === 'rh'; })) bad.push('rh server timing visible');
+      console.log(prefix + 'cross-origin timing: ' + (bad.length ? 'fail, ' + bad.join('; ') : 'ok'));
+    });
+    // the test runs this line in node too and compares the columns
+    (function () {
+      var o = { m: function () { return new Error('x').stack.split('\n')[2].match(/:(\d+)\)?$/)[1]; } }, k = 'm';
+      var cols = [o[k](), o.m(), (0, o.m)(), o[k].call(o), o[k](o[k]())]; // CALL_COLUMNS_MARKER
+      console.log(prefix + 'call columns ' + cols.join(','));
+    })();
+    // the test compares this with the line of the marker below in the file
+    (function () {
+      var position = new Error('x').stack.split('\n')[1].match(/:(\d+):(\d+)\)?$/); // STACK_LINE_MARKER
+      console.log(prefix + 'inline script stack line ' + (position ? position[1] : 'none'));
+    })();
+    check('stack depth', function () {
+      function a(n) { return n ? a(n - 1) : new Error('x').stack.split('\n').length - 1; }
+      var depth = a(20);
+      return depth === Error.stackTraceLimit || depth + ' frames, limit ' + Error.stackTraceLimit;
+    });
+    check('toString frame name', function () {
+      try { Function.prototype.toString.call(Object.create(Function.prototype)); } catch (e) {
+        return e.stack.split('\n')[1].trim().indexOf('at Function.toString') === 0 || e.stack.split('\n')[1];
+      }
+    });
+    check('webgl powerPreference', function () {
+      var gl = document.createElement('canvas').getContext('webgl', { powerPreference: 'low-power' });
+      if (!gl) return true;
+      return gl.getContextAttributes().powerPreference === 'low-power' || gl.getContextAttributes().powerPreference;
+    });
+    // in the cross-site frame, self-only permissions are denied (camera isn't delegated, autoplay-style ones aren't asked)
+    check('webgl powerPreference default', function () {
+      var gl = typeof OffscreenCanvas !== 'undefined' && new OffscreenCanvas(1, 1).getContext('webgl');
+      if (!gl) return true;
+      var expected = prefix ? 'low-power' : 'default';
+      return gl.getContextAttributes().powerPreference === expected || gl.getContextAttributes().powerPreference;
+    });
+    // self-only features: off in the cross-site frame, on at the top
+    check('feature policy', function () {
+      if (!document.featurePolicy) return true;
+      var allowed = document.featurePolicy.allowsFeature('summarizer');
+      return allowed === !prefix || allowed;
+    });
+    if (prefix && typeof Summarizer === 'function') {
+      Summarizer.availability().then(function (a) {
+        console.log('frame summarizer availability: ' + (a === 'unavailable' ? 'ok' : 'fail, ' + a));
+      });
+    }
+    if (prefix && navigator.permissions) {
+      navigator.permissions.query({ name: 'camera' }).then(function (status) {
+        console.log('frame camera permission: ' + (status.state === 'denied' ? 'ok' : 'fail, ' + status.state));
+      }, function (e) { console.log('frame camera permission: ok (unsupported)'); });
+    }
+    if (prefix) console.log('frame done');
+    else {
+      var f = document.createElement('iframe');
+      f.src = 'http://localhost:18090/frames/fidelity.html?frame';
+      document.body.appendChild(f);
+      console.log('done');
+    }
+  </script>
+</body>
+</html>

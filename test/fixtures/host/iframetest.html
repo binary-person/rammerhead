@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+    
+    #iframeContainer {
+      position: absolute;
+      top: 40px; /* Adjust this value to set the distance between input and iframe */
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+    
+    iframe {
+      border: none;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <input type="text" id="urlInput" placeholder="Enter URL" oninput="loadIframe()" />
+  <div id="iframeContainer">
+    <iframe id="myIframe"></iframe>
+  </div>
+
+  <script>
+    function loadIframe() {
+      var inputUrl = document.getElementById("urlInput").value;
+      document.getElementById("myIframe").src = inputUrl;
+    }
+  </script>
+</body>
+</html>

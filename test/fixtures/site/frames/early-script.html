@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <script>
+    // runs code in a new iframe before hammerhead has set it up (turnstile does something like this)
+    var frame = document.createElement('iframe');
+    document.body.appendChild(frame);
+    try {
+      frame.contentWindow.eval('var early = 1;');
+    } catch (e) {
+      console.log('failed, eval threw ' + e.message);
+    }
+    setTimeout(function () {
+      try {
+        console.log('result: ' + frame.contentWindow.eval('[1, 2].map(function (x) { return x * 2; }).join(",")'));
+      } catch (e) {
+        console.log('failed, threw ' + e.message);
+      }
+      console.log('done');
+    }, 500);
+  </script>
+</body>
+</html>

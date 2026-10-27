@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <script>
+    // like cloudflare's challenge page: a hidden iframe that may not run scripts, used for clean natives
+    window.childRan = false;
+    var f = document.createElement('iframe');
+    f.setAttribute('sandbox', 'allow-same-origin');
+    f.srcdoc = '<script>parent.childRan = true<\/script>';
+    document.body.appendChild(f);
+    f.onload = function () {
+      console.log('scripts blocked: ' + (window.childRan ? 'fail, the frame ran a script' : 'ok'));
+      console.log('parent reaches in: ' + (f.contentWindow.eval('1+1') === 2 ? 'ok' : 'fail'));
+      console.log('sandbox tokens: ' + (f.sandbox.contains('allow-scripts') ? 'fail, ' + f.sandbox.value : 'ok'));
+    };
+  </script>
+</body>
+</html>

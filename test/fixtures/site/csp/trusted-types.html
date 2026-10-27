@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>.rh-static { width: 50px; }</style>
+<script nonce="rhtest">
+  // trusted types enforcement as a page sees it (turnstile's widget runs under a policy like this one)
+  var pending = 1, violations = [];
+  function report(name, value) { console.log('tt ' + name + ': ' + value); }
+  function done() { if (--pending === 0) { report('violations', violations.sort().join(' | ')); console.log('tt done'); } }
+  document.addEventListener('securitypolicyviolation', function (e) {
+    violations.push([e.violatedDirective, e.blockedURI, e.sample].join(','));
+  });
+  function probe(name, fn) { pending++; try { fn(function (v) { report(name, v); done(); }); } catch (e) { report(name, 'threw ' + e.name + ' ' + e.message); done(); } }
+  var app = trustedTypes.createPolicy('app', {
+    createHTML: function (s) { return s; }, createScript: function (s) { return s; }, createScriptURL: function (s) { return s; }
+  });
+  probe('innerHTML string', function (cb) { document.createElement('div').innerHTML = '<b>x</b>'; cb('set'); });
+  probe('innerHTML trusted', function (cb) { var d = document.createElement('div'); d.innerHTML = app.createHTML('<b>x</b>'); cb(d.innerHTML); });
+  probe('eval string', function (cb) { cb(eval('1 + 1')); });
+  probe('eval trusted', function (cb) { cb(eval(app.createScript('1 + 2'))); });
+  probe('indirect eval trusted', function (cb) { cb((0, eval)(app.createScript('1 + 3'))); });
+  probe('function trusted', function (cb) { cb(new Function(app.createScript('return 4'))()); });
+  probe('script src string', function (cb) { document.createElement('script').src = 'data:,0'; cb('set'); });
+  probe('script text trusted', function (cb) {
+    var s = document.createElement('script');
+    s.nonce = 'rhtest';
+    s.text = app.createScript('window.rhTextRan = 1');
+    document.head.appendChild(s);
+    cb(!!window.rhTextRan);
+  });
+  // youtube sets script text through node's setter with a trusted value
+  probe('script node textContent trusted', function (cb) {
+    var s = document.createElement('script');
+    s.nonce = 'rhtest';
+    Object.getOwnPropertyDescriptor(Node.prototype, 'textContent').set.call(s, app.createScript('window.rhNodeTextRan = 1'));
+    document.head.appendChild(s);
+    cb(!!window.rhNodeTextRan);
+  });
+  probe('script innerText trusted', function (cb) {
+    var s = document.createElement('script');
+    s.nonce = 'rhtest';
+    s.innerText = app.createScript('window.rhInnerTextRan = 1');
+    document.head.appendChild(s);
+    cb(!!window.rhInnerTextRan);
+  });
+  probe('srcdoc string', function (cb) { document.createElement('iframe').srcdoc = '<b>x</b>'; cb('set'); });
+  probe('document.write string', function (cb) {
+    var f = document.createElement('iframe');
+    document.documentElement.appendChild(f);
+    var doc = f.contentDocument;
+    doc.open();
+    try { doc.write('<p>x</p>'); cb('written'); } catch (e) { cb('threw ' + e.name); }
+    doc.close();
+  });
+  // hammerhead rewrites styles and restores attributes through sinks too
+  probe('style text', function (cb) {
+    var s = document.createElement('style');
+    s.textContent = '.rh-tt { width: 20px; } .rh-tt2 { height: 7px; }';
+    document.head.appendChild(s);
+    var s2 = document.createElement('style');
+    s2.innerHTML = app.createHTML('.rh-tt2 { width: 30px; }');
+    document.head.appendChild(s2);
+    var d = document.createElement('div'), d2 = document.createElement('div');
+    d.className = 'rh-tt';
+    d2.className = 'rh-tt2';
+    document.documentElement.appendChild(d);
+    document.documentElement.appendChild(d2);
+    var host = document.createElement('div');
+    host.innerHTML = app.createHTML('<style>.rh-tt3 { width: 40px; }</style><div class="rh-tt3"></div>');
+    document.documentElement.appendChild(host);
+    cb([d.getBoundingClientRect().width, d2.getBoundingClientRect().width, d2.getBoundingClientRect().height,
+      host.lastChild.getBoundingClientRect().width].join(' '));
+  });
+  // hammerhead goes over the page's own <style>s when it starts
+  probe('static style', function (cb) {
+    addEventListener('DOMContentLoaded', function () {
+      cb(document.querySelector('.rh-static-el').getBoundingClientRect().width);
+    });
+  });
+  // about:blank frames inherit the policy, and hammerhead processes what goes into them
+  probe('style in frame', function (cb) {
+    var f = document.createElement('iframe');
+    document.documentElement.appendChild(f);
+    var doc = f.contentDocument, out = [];
+    var s = doc.createElement('style');
+    s.textContent = '.rh-f { width: 60px; }';
+    try { doc.head.appendChild(s); } catch (e) { out.push(e.name); }
+    var s2 = document.createElement('style');
+    s2.textContent = '.rh-f2 { width: 70px; }';
+    try { doc.head.appendChild(s2); } catch (e) { out.push(e.name); }
+    var d = doc.createElement('div');
+    d.innerHTML = app.createHTML('<style>.rh-f3 { width: 80px; }</style><i class="rh-f3" style="display:block"></i>');
+    doc.body.appendChild(d);
+    ['rh-f', 'rh-f2'].forEach(function (c) { var e = doc.createElement('div'); e.className = c; doc.body.appendChild(e); out.push(e.getBoundingClientRect().width); });
+    out.push(d.lastChild.getBoundingClientRect().width);
+    cb(out.join(' '));
+  });
+  // with a default policy, hammerhead's own writes must not go through it (pages see every call)
+  probe('default policy sees only page values', function (cb) {
+    var f = document.createElement('iframe');
+    document.documentElement.appendChild(f);
+    var w = f.contentWindow, doc = f.contentDocument, calls = [];
+    w.trustedTypes.createPolicy('default', {
+      createHTML: function (s) { calls.push('html:' + s); return ''; },
+      createScript: function (s) { calls.push('script:' + s); return null; },
+      createScriptURL: function (s) { calls.push('url:' + s); return null; }
+    });
+    var s = doc.createElement('style');
+    s.textContent = '.rh-d { width: 90px; }';
+    doc.head.appendChild(s);
+    var d = doc.createElement('div');
+    d.innerHTML = w.trustedTypes.createPolicy('app', { createHTML: function (x) { return x; } }).createHTML('<style>.rh-d2 { width: 95px; }</style><i class="rh-d2" style="display:block"></i>');
+    doc.body.appendChild(d);
+    var e = doc.createElement('div');
+    e.className = 'rh-d';
+    doc.body.appendChild(e);
+    // turnstile: trusted markup with a <style>, then into a closed shadow root
+    var host = doc.createElement('div');
+    doc.body.appendChild(host);
+    var root = host.attachShadow({ mode: 'closed' });
+    var inner = doc.createElement('div');
+    inner.innerHTML = w.trustedTypes.createPolicy('app2', { createHTML: function (x) { return x; } }).createHTML('<style>#rh-s { width: 33px; }</style><i id="rh-s" style="display:block"></i>');
+    root.appendChild(inner);
+    cb([e.getBoundingClientRect().width, d.lastChild.getBoundingClientRect().width, inner.lastChild.getBoundingClientRect().width].join(' ') + ' | ' + calls.join(' '));
+  });
+  probe('read back script', function (cb) {
+    var d = document.createElement('div');
+    d.innerHTML = app.createHTML('<script src="http://127.0.0.1:18090/x.js"><\/script><b>x</b>');
+    cb(d.innerHTML);
+  });
+  probe('policy name not allowed', function (cb) { trustedTypes.createPolicy('other', {}); cb('created'); });
+  probe('is trusted', function (cb) { cb(trustedTypes.isHTML(app.createHTML('')) + ' ' + trustedTypes.isScript(app.createScript(''))); });
+  // turnstile's self-test: a default policy in an about:blank frame (it inherits the policy), then each sink
+  probe('default policy in frame', function (cb) {
+    var f = document.createElement('iframe');
+    f.style.display = 'none';
+    document.documentElement.appendChild(f);
+    var w = f.contentWindow, calls = [];
+    function hook(kind) { return function () { calls.push(kind + '(' + [].slice.call(arguments).join(',') + ')'); }; }
+    w.trustedTypes.createPolicy('default', { createHTML: function (s) { calls.push('html(' + [].slice.call(arguments).join(',') + ')'); return s; },
+      createScript: hook('script'), createScriptURL: hook('url') });
+    var out = [];
+    var d = f.contentDocument.createElement('div');
+    d.innerHTML = '<b>t</b>';
+    out.push(d.innerHTML);
+    try { out.push(w.eval('0')); } catch (e) { out.push(e.name + ' ' + e.message); }
+    try { f.contentDocument.createElement('script').src = 'data:,0'; out.push('set'); } catch (e) { out.push(e.name); }
+    cb(out.join(' ') + ' | ' + calls.join(' '));
+  });
+  probe('worker', function (cb) {
+    var src = "var p = trustedTypes.createPolicy('app', { createScript: function (s) { return s; } });" +
+      "var r = []; try { r.push(eval('1')); } catch (e) { r.push(e.name); } r.push(eval(p.createScript('2'))); postMessage(r.join(' '));";
+    var w = new Worker(app.createScriptURL(URL.createObjectURL(new Blob([src], { type: 'text/javascript' }))));
+    w.onmessage = function (e) { cb(e.data); };
+    w.onerror = function (e) { cb('error ' + e.message); };
+  });
+  done();
+</script>
+</head>
+<body><div class="rh-static rh-static-el"></div></body>
+</html>

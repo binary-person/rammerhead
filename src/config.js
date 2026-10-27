@@ -3,6 +3,8 @@ const fs = require('fs');
 const os = require('os');
 const RammerheadJSMemCache = require('./classes/RammerheadJSMemCache.js');
 const RammerheadJSFileCache = require('./classes/RammerheadJSFileCache.js');
+const RammerheadCloudflareCapSolver = require("./classes/RammerheadCloudflareCapSolver.js");
+const RammerheadCloudflare2Captcha = require("./classes/RammerheadCloudflare2Captcha.js");
 
 const enableWorkers = os.cpus().length !== 1;
 
@@ -51,6 +53,30 @@ module.exports = {
     // the client to connect to http2 before connecting to their websocket
     disableHttp2: false,
 
+    // configure timeouts for page/xhr requests.
+    // useful if a destination site is slow and you are getting the following message
+    // "Failed to complete a request to ... within the timeout period. The problem may be related to a..."
+    requestTimeoutAjax: 2 * 60 * 1000,
+    requestTimeoutPage: 25 * 1000,
+    // answer 504 and log requests that haven't started responding after this long
+    stuckRequestTimeout: 3 * 60 * 1000,
+
+    /// CLOUDFLARE JS CHALLENGE BYPASS CONFIGURATION
+
+    cloudflareSolver: null,
+    // cloudflareSolver: new RammerheadCloudflare2Captcha({
+    //     apiKey: 'YOUR_2CAPTCHA_API_KEY',
+
+    //     disableProxy: true // you can disable the socks5 proxy, but it's here just in case cloudflare needs it
+
+    // // note: you don't need the following options if you set disableProxy to true
+    // // this must be your public VPS's IP. If your routing setup is complicated, see the
+    // // documentation in RammerheadCloudflareGenericSolver.js for more details
+    //     proxyBindAddress: 'YOUR_PUBLIC_SERVER_IP', // in the form of 12.34.56.78
+    //     proxyPort: 8890, // you can use any port here
+
+    // }),
+
     //// REWRITE HEADER CONFIGURATION ////
 
     // removes reverse proxy headers
@@ -94,4 +120,6 @@ module.exports = {
     // getIP: req => (req.headers['x-forwarded-for'] || req.connection.remoteAddress || '').split(',')[0].trim()
 };
 
-if (fs.existsSync(path.join(__dirname, '../config.js'))) Object.assign(module.exports, require('../config'));
+// RH_CONFIG overrides ../config.js (used by tests)
+const overridePath = process.env.RH_CONFIG ? path.resolve(process.env.RH_CONFIG) : path.join(__dirname, '../config.js');
+if (fs.existsSync(overridePath)) Object.assign(module.exports, require(overridePath));
