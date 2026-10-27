@@ -1,10 +1,10 @@
-# rammerhead
+# Rammerhead
 
-> proxy based on testcafe-hammerhead (password is `sharkie4life`)
+> Proxy based on testcafe-hammerhead (password is `sharkie4life`)
 
 Demo link: https://demo-opensource.rammerhead.org
 
-Polished closed-source-for-now browser version: https://browser.rammerhead.org (more links by awesome community members in the discord server at the end of readme)
+Polished closed-source-for-now browser version: https://browser.rammerhead.org (more links by awesome community members in the discord server at the end of README.md)
 
 
 ## Supporting me and contributing
@@ -12,7 +12,7 @@ Polished closed-source-for-now browser version: https://browser.rammerhead.org (
 Server infrastructure costs money and developing this project consumes a lot of my time, so I would appreciate it greatly if you become a Patreon member: https://www.patreon.com/rammerhead
 
 
-## Who is this package for
+## Who is this package for?
 
 Package is for those who want a fully-configurable proxy that works on many sites
 
